@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch, url }) => {
@@ -7,13 +8,11 @@ export const load: PageServerLoad = async ({ fetch, url }) => {
 	]);
 
 	if (!exercisesResponse.ok || !bodyPartsResponse.ok) {
-		throw new Error('Failed to fetch data');
+		throw error(500, 'Fallo al cargar datos de entrenamiento');
 	}
 
 	const exercises = await exercisesResponse.json();
 	const bodyParts = await bodyPartsResponse.json();
-	/*  */
-
 	return {
 		exercises,
 		bodyParts
