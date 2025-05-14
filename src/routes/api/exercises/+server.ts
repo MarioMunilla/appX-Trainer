@@ -1,17 +1,19 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { supabase } from '$lib/supabaseClient';
 
-export const GET: RequestHandler = async () => {
-    return json([
-        {
-            name: '3/4 sit-up', 
-            bodyPart: 'Waist',
-            gifUrl: 'https://v2.exercisedb.io/image/20i0TUoxwWmJ0Y'
-        },
-        {
-            name: 'Air Bike', 
-            bodyPart: 'Waist',
-            gifUrl: 'https://v2.exercisedb.io/image/P4TTPY5AR8kFNs'
-        }
-    ]);
+const RESULTS_PER_PAGE = 6;
+
+export const GET: RequestHandler = async ({ url }) => {
+	const builder = supabase.from('exercises').select('*');
+
+	const page = url.searchParams.get('p') ?? 0;
+
+	builder.range(
+		Number(page) * RESULTS_PER_PAGE,
+		Number(page) * RESULTS_PER_PAGE + RESULTS_PER_PAGE - 1
+	);
+
+	const { data } = await builder;
+	return json(data);
 };
