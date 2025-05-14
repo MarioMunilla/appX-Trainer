@@ -1,15 +1,15 @@
 <script lang="ts">
-	import ExerciseCard from '../../components/ExerciseCard.svelte';
-	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
-	import Filter from '../../components/filter/Filter.svelte';
+	import SearchBar from '../../components/SearchBar.svelte';
 	import type { PageData } from './$types';
-	import MenuNavegacion from '../../components/MenuNavegacion.svelte';
-	import FilterEquipment from '../../components/filter/FilterEquipment.svelte';
+	import ExerciseCard from '../../components/ExerciseCard.svelte';
 	import FilterFavorites from '../../components/filter/FilterFavorites.svelte';
+	import FilterEquipment from '../../components/filter/FilterEquipment.svelte';
+	import Filter from '../../components/filter/Filter.svelte';
 	import FilterGroup from '../../components/filter/FilterGroup.svelte';
+	import MenuNavegacion from '../../components/MenuNavegacion.svelte';
 
 	export let data: PageData;
-	let searchQuery = '';
+
 	let selectedGroup = '';
 	let selectedDifficulty = '';
 	let selectedEquipment = '';
@@ -18,12 +18,20 @@
 	function handleGroupChange(group: string) {
 		selectedGroup = group;
 	}
-
-	function filteredExercises() {
-		return data.exercises.filter((exercise: { bodyPart: string }) => {
-			if (!selectedGroup) return true;
-			return exercise.bodyPart === selectedGroup;
-		});
+	function mapDifficulty(difficulty: string): 'beginner' | 'intermediate' | 'advanced' {
+		switch (difficulty?.toLowerCase()) {
+			case 'beginner':
+			case 'beginner':
+				return 'beginner';
+			case 'intermediate':
+			case 'intermediate':
+				return 'intermediate';
+			case 'advanced':
+			case 'advanced':
+				return 'advanced';
+			default:
+				return 'beginner';
+		}
 	}
 </script>
 
@@ -34,77 +42,60 @@
 		'/tienda': 'Tienda'
 	}}
 />
-<section class="entrenamiento">
-	<div class="entrenamiento__search-bar">
-		<input
-			class="entrenamiento__search-input"
-			type="text"
-			bind:value={searchQuery}
-			placeholder="🔍 Search Exercise..."
+
+<SearchBar />
+
+<div class="entrenamiento__layout">
+	<aside class="entrenamiento__filters">
+		<h2 class="entrenamiento__filters-title">Filters</h2>
+
+		<FilterGroup
+			options={data.bodyParts.map((part: { name: any }) => part.name)}
+			on:change={(event) => handleGroupChange(event.detail)}
 		/>
-	</div>
 
-	<div class="entrenamiento__layout">
-		<aside class="entrenamiento__filters">
-			<h2 class="entrenamiento__filters-title">Filters</h2>
+		<Filter
+			label="Difficulty"
+			options={[
+				{ value: 'beginner', text: 'Beginner' },
+				{ value: 'intermediate', text: 'Intermediate' },
+				{ value: 'advanced', text: 'Advanced' }
+			]}
+			onChange={(valor) => (selectedDifficulty = valor)}
+		/>
 
-			<FilterGroup
-				options={data.bodyParts.map((part: { name: any }) => part.name)}
-				on:change={(event) => handleGroupChange(event.detail)}
-			/>
+		<FilterEquipment on:change={(e) => (selectedEquipment = e.detail)} />
 
-			<Filter
-				label="Difficulty"
-				options={[
-					{ value: 'facil', text: 'Beginner' },
-					{ value: 'intermedio', text: 'Intermediate' },
-					{ value: 'dificil', text: 'Advanced' }
-				]}
-				onChange={(nuevoValor) => console.log(nuevoValor)}
-			/>
+		<FilterFavorites on:change={(e) => (showFavorites = e.detail)} />
+	</aside>
 
-			<FilterEquipment on:change={(e) => (selectedEquipment = e.detail)} />
+	<main class="entrenamiento__content">
+		<div class="entrenamiento__grid">
+			{#each data.exercises as exercise}
+				<ExerciseCard
+					name={exercise.name}
+					bodyParts={[exercise.bodyPart]}
+					gif_url={exercise.gif_url}
+					difficulty={mapDifficulty(exercise.difficulty)}
+				/>
+			{/each}
+		</div>
 
-			<FilterFavorites on:change={(e) => (showFavorites = e.detail)} />
-		</aside>
-
-		<main class="entrenamiento__content">
-			<div class="entrenamiento__grid">
-				{#each filteredExercises() as exercise}
-					<ExerciseCard
-						name={exercise.name}
-						bodyParts={[exercise.bodyPart]}
-						gif_url={exercise.gif_url}
-					/>
-				{/each}
-			</div>
-
-			<div class="entrenamiento__pagination">
-				<button class="entrenamiento__page-button">1</button>
-				<button class="entrenamiento__page-button">2</button>
-				<button class="entrenamiento__page-button">3</button>
-				<span class="entrenamiento__page-dots">...</span>
-				<button class="entrenamiento__page-button">▶</button>
-			</div>
-		</main>
-	</div>
-</section>
+		<div class="entrenamiento__pagination">
+			<button class="entrenamiento__page-button">1</button>
+			<button class="entrenamiento__page-button">2</button>
+			<button class="entrenamiento__page-button">3</button>
+			<span class="entrenamiento__page-dots">...</span>
+			<button class="entrenamiento__page-button">▶</button>
+		</div>
+	</main>
+</div>
 
 <style>
 	.entrenamiento {
 		max-width: 120rem;
 		margin: 0 auto;
 		padding: 2rem;
-	}
-	.entrenamiento__search-bar {
-		margin-bottom: 2rem;
-	}
-	.entrenamiento__search-input {
-		width: 100%;
-		padding: 1rem;
-		font-size: 1.2rem;
-		border: 0.1rem solid #ccc;
-		border-radius: 0.6rem;
 	}
 	.entrenamiento__layout {
 		display: grid;
@@ -127,7 +118,7 @@
 	}
 	.entrenamiento__grid {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 		gap: 2rem;
 	}
 	.entrenamiento__pagination {
