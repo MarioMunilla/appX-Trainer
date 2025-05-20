@@ -3,17 +3,6 @@
 	import { supabase } from '$lib/supabaseClient';
 
 	export let data;
-
-
-
 </script>
 
-<MenuNavegacion
-	items={{
-		'/desafio-diario':'Desafío diario',
-		'/entrenamiento': 'Entrenamiento',
-		'/tienda': 'Tienda'
-	}}
-/>
-
-<slot />
+<h1>X-Trainer</h1>
