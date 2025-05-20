@@ -9,7 +9,7 @@
 </script>
 
 <Filter label='Difficulty' options={[
-	{value: 'facil', text: 'Beginner'},
-	{value: 'intermedio', text: 'Intermediate'},
-	{value: 'dificil', text: 'Advanced'}
+	{value: 'beginner', text: 'Beginner'},
+	{value: 'intermediate', text: 'Intermediate'},
+	{value: 'advanced', text: 'Advanced'}
 ]} {onChange} />
