@@ -5,7 +5,9 @@
 </script>
 
 <nav class="nav">
-  <img src="/favicon.png" alt="X-Trainner Logo" class="nav__logo" />
+  <a href="/" class="nav__logo-link">
+    <img src="/favicon.png" alt="X-Trainner Logo" class="nav__logo" />
+  </a>
   {#each entradas as [url, texto]}
     <a class="nav__link" href={url}>{texto}</a>
   {/each}
@@ -24,12 +26,16 @@
     border-bottom: 0.2rem solid #1976d2;
   }
 
+  .nav__logo-link {
+    display: flex;
+    align-items: center;
+  }
+
   .nav__logo {
     width: 4.5rem;
     height: 4.5rem;
     border-radius: 20%;
-    font-size: 4em;
-    object-fit: cover;
+    cursor: pointer;
   }
 
   .nav__link {
