@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import SearchBar from '../../components/SearchBar.svelte';
 	import type { PageData } from './$types';
 	import ExerciseCard from '../../components/ExerciseCard.svelte';
@@ -6,27 +7,36 @@
 	import FilterEquipment from '../../components/filter/FilterEquipment.svelte';
 	import Filter from '../../components/filter/Filter.svelte';
 	import FilterGroup from '../../components/filter/FilterGroup.svelte';
-	import MenuNavegacion from '../../components/MenuNavegacion.svelte';
+	import { goto } from '$app/navigation';
 
 	export let data: PageData;
 
-	let selectedGroup = '';
 	let selectedDifficulty = '';
 	let selectedEquipment = '';
 	let showFavorites = false;
+	let searchTerm = '';
+	let searchTermGroup=''
+	$: searchTerm = $page.url.searchParams.get('q') || '';
+	$: searchTermGroup = $page.url.searchParams.get('group') || '';
 
 	function handleGroupChange(group: string) {
-		selectedGroup = group;
+		console.log('holñaaa')
+		const params = new URLSearchParams($page.url.searchParams);
+		
+		if (group) {
+			params.set('group', group);
+		} else {
+			params.delete('group');
+		}
+		goto(`/entrenamiento?${params.toString()}`);
 	}
+
 	function mapDifficulty(difficulty: string): 'beginner' | 'intermediate' | 'advanced' {
 		switch (difficulty?.toLowerCase()) {
 			case 'beginner':
-			case 'beginner':
 				return 'beginner';
 			case 'intermediate':
-			case 'intermediate':
 				return 'intermediate';
-			case 'advanced':
 			case 'advanced':
 				return 'advanced';
 			default:
@@ -35,23 +45,15 @@
 	}
 </script>
 
-<MenuNavegacion
-	items={{
-		'/desafio-diario': 'Desafío diario',
-		'/entrenamiento': 'Entrenamiento',
-		'/tienda': 'Tienda'
-	}}
-/>
+<section class="entrenamiento">
+	<SearchBar initialQuery={searchTerm} />
 
-<SearchBar />
-
-<div class="entrenamiento__layout">
 	<aside class="entrenamiento__filters">
 		<h2 class="entrenamiento__filters-title">Filters</h2>
 
 		<FilterGroup
 			options={data.bodyParts.map((part: { name: any }) => part.name)}
-			on:change={(event) => handleGroupChange(event.detail)}
+			onChange={handleGroupChange}
 		/>
 
 		<Filter
@@ -71,7 +73,7 @@
 
 	<main class="entrenamiento__content">
 		<div class="entrenamiento__grid">
-			{#each data.exercises as exercise}
+			{#each data.exercises as exercise(exercise.id)}
 				<ExerciseCard
 					name={exercise.name}
 					bodyParts={[exercise.bodyPart]}
@@ -81,27 +83,32 @@
 			{/each}
 		</div>
 
-		<div class="entrenamiento__pagination">
+
+		<!-- <div class="entrenamiento__pagination">
 			<button class="entrenamiento__page-button">1</button>
 			<button class="entrenamiento__page-button">2</button>
 			<button class="entrenamiento__page-button">3</button>
 			<span class="entrenamiento__page-dots">...</span>
 			<button class="entrenamiento__page-button">▶</button>
-		</div>
+		</div> -->
 	</main>
-</div>
+</section>
 
 <style>
 	.entrenamiento {
-		max-width: 120rem;
+		max-width: 1280px;
 		margin: 0 auto;
 		padding: 2rem;
-	}
-	.entrenamiento__layout {
 		display: grid;
+		grid-template-rows: auto 1fr;
 		grid-template-columns: 20rem 1fr;
 		gap: 2rem;
 	}
+
+	:global(.entrenamiento > *:nth-child(1)) {
+		grid-column: 1 / 3;
+	}
+
 	.entrenamiento__filters {
 		background: #f9f9f9;
 		padding: 1.5rem;
