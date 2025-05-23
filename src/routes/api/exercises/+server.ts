@@ -8,6 +8,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const page = Number(url.searchParams.get('p') ?? '0');
 	const search = url.searchParams.get('q') ?? '';
 	const group = url.searchParams.get('group');
+	const difficulty = url.searchParams.get('difficulty');
 
 	let builder = supabase.from('exercises').select('*').ilike('name', `%${search}%`);
 
@@ -23,6 +24,10 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 
 		builder = builder.eq('body_part_id', bodyPart.id);
+	}
+
+	if (difficulty) {
+		builder = builder.ilike('difficulty', difficulty);
 	}
 
 	builder = builder.range(page * RESULTS_PER_PAGE, page * RESULTS_PER_PAGE + RESULTS_PER_PAGE - 1);
