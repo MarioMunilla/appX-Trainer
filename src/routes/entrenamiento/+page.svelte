@@ -15,14 +15,13 @@
 	let selectedEquipment = '';
 	let showFavorites = false;
 	let searchTerm = '';
-	let searchTermGroup=''
+	let searchTermGroup = '';
 	$: searchTerm = $page.url.searchParams.get('q') || '';
 	$: searchTermGroup = $page.url.searchParams.get('group') || '';
 
 	function handleGroupChange(group: string) {
-		console.log('holñaaa')
 		const params = new URLSearchParams($page.url.searchParams);
-		
+
 		if (group) {
 			params.set('group', group);
 		} else {
@@ -43,6 +42,19 @@
 				return 'beginner';
 		}
 	}
+
+	 function handleLevel(level: string) {
+        selectedDifficulty = level;
+        const params = new URLSearchParams($page.url.searchParams);
+
+        if (level) {
+            params.set('difficulty', level);
+        } else {
+            params.delete('difficulty');
+        }
+
+        goto(`/entrenamiento?${params.toString()}`);
+    }
 </script>
 
 <section class="entrenamiento">
@@ -63,7 +75,7 @@
 				{ value: 'intermediate', text: 'Intermediate' },
 				{ value: 'advanced', text: 'Advanced' }
 			]}
-			onChange={(valor) => (selectedDifficulty = valor)}
+			onChange={handleLevel}
 		/>
 
 		<FilterEquipment on:change={(e) => (selectedEquipment = e.detail)} />
@@ -73,7 +85,7 @@
 
 	<main class="entrenamiento__content">
 		<div class="entrenamiento__grid">
-			{#each data.exercises as exercise(exercise.id)}
+			{#each data.exercises as exercise (exercise.id)}
 				<ExerciseCard
 					name={exercise.name}
 					bodyParts={[exercise.bodyPart]}
@@ -82,15 +94,6 @@
 				/>
 			{/each}
 		</div>
-
-
-		<!-- <div class="entrenamiento__pagination">
-			<button class="entrenamiento__page-button">1</button>
-			<button class="entrenamiento__page-button">2</button>
-			<button class="entrenamiento__page-button">3</button>
-			<span class="entrenamiento__page-dots">...</span>
-			<button class="entrenamiento__page-button">▶</button>
-		</div> -->
 	</main>
 </section>
 
@@ -127,27 +130,5 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 		gap: 2rem;
-	}
-	.entrenamiento__pagination {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		margin-top: 2rem;
-		gap: 0.5rem;
-	}
-	.entrenamiento__page-button {
-		padding: 0.6rem 1rem;
-		border: none;
-		border-radius: 0.4rem;
-		background-color: #eee;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: background 0.2s ease;
-	}
-	.entrenamiento__page-button:hover {
-		background-color: #ddd;
-	}
-	.entrenamiento__page-dots {
-		font-size: 1.2rem;
 	}
 </style>
