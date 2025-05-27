@@ -6,24 +6,34 @@ const RESULTS_PER_PAGE = 6;
 
 export const GET: RequestHandler = async ({ url }) => {
 	const page = Number(url.searchParams.get('p') ?? '0');
-	const search = url.searchParams.get('q') ?? '';
+	const search = (url.searchParams.get('q') ?? '').trim();
 	const group = url.searchParams.get('group');
 	const difficulty = url.searchParams.get('difficulty');
 
-	let builder = supabase.from('exercises').select('*').ilike('name', `%${search}%`);
+	let builder = supabase.from('exercises').select('*', { count: 'exact' });
+
+	// |--------------------------------|         |-------------------------|
+	// |           exercises            |         |        body_parts       |
+	// |--------------------------------|         |-------------------------|
+	// | id | name | ... | body_part_id |         | id |        name        |
+	// ----------------------------------         ---------------------------
+	// | 3  | press |... |     4        |   -->   | 4  |       chest        |
+	// |--------------------------------|         |-------------------------|
+	//                                  Muchos a uno
+	//                         Un exercise solo una body_part
+
+	// Si se busca muchos a muchos, hay que cambiar esto a una tabla intermedia.
+	//							exercises_body_parts
+	//							  | id_ex | id_bp |
+	//                                4       4
+	//								  4       6
+
+	if (search != '') {
+		builder.ilike('name', `%${search}%`);
+	}
 
 	if (group) {
-		const { data: bodyPart, error: bodyPartError } = await supabase
-			.from('body_parts')
-			.select('id')
-			.eq('name', group)
-			.single();
-
-		if (bodyPartError || !bodyPart) {
-			throw error(400, 'Invalid group name');
-		}
-
-		builder = builder.eq('body_part_id', bodyPart.id);
+		builder = builder.eq('body_part_id', group);
 	}
 
 	if (difficulty) {
@@ -32,11 +42,23 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	builder = builder.range(page * RESULTS_PER_PAGE, page * RESULTS_PER_PAGE + RESULTS_PER_PAGE - 1);
 
-	const { data, error: queryError } = await builder;
+	const { data, error: queryError, count } = await builder;
 
 	if (queryError) {
 		throw error(500, queryError.message);
 	}
 
-	return json(data);
+	const totalPages = Math.ceil(count! / RESULTS_PER_PAGE);
+	const previous = page == 0 ? null : page - 1;
+	const next = page >= totalPages - 1 ? null : page + 1;
+
+	return json({
+		info: {
+			count: count,
+			pages: totalPages,
+			prev: previous,
+			next: next
+		},
+		results: data
+	});
 };
