@@ -43,7 +43,7 @@
 		}
 	}
 
-	 function handleLevel(level: string) {
+	function handleLevel(level: string) {
         selectedDifficulty = level;
         const params = new URLSearchParams($page.url.searchParams);
 
@@ -55,6 +55,22 @@
 
         goto(`/entrenamiento?${params.toString()}`);
     }
+
+	async function fetchNextPage() {
+		const nextPage = data.exercises.info.next
+
+		$page.url.searchParams.set('p', nextPage)
+		const url = '/api/exercises?'
+		
+		const response = await fetch(url + $page.url.searchParams)
+		const jsonResponse = await response.json()
+
+		data.exercises.info = jsonResponse.info
+		data.exercises.results = [
+			...data.exercises.results,
+			...jsonResponse.results
+		]
+	}
 </script>
 
 <section class="entrenamiento">
@@ -64,7 +80,7 @@
 		<h2 class="entrenamiento__filters-title">Filters</h2>
 
 		<FilterGroup
-			options={data.bodyParts.map((part: { name: any }) => part.name)}
+			options={data.bodyParts}
 			onChange={handleGroupChange}
 		/>
 
@@ -75,6 +91,7 @@
 				{ value: 'intermediate', text: 'Intermediate' },
 				{ value: 'advanced', text: 'Advanced' }
 			]}
+			id="difficulty"
 			onChange={handleLevel}
 		/>
 
@@ -85,7 +102,7 @@
 
 	<main class="entrenamiento__content">
 		<div class="entrenamiento__grid">
-			{#each data.exercises as exercise (exercise.id)}
+			{#each data.exercises.results as exercise (exercise.id)}
 				<ExerciseCard
 					name={exercise.name}
 					bodyParts={[exercise.bodyPart]}
@@ -94,6 +111,10 @@
 				/>
 			{/each}
 		</div>
+
+		{#if data.exercises.info.next}
+			<button onclick={fetchNextPage}>Cargar más</button>
+		{/if}
 	</main>
 </section>
 
