@@ -8,10 +8,11 @@
 	import Filter from '../../components/filter/Filter.svelte';
 	import FilterGroup from '../../components/filter/FilterGroup.svelte';
 	import { goto } from '$app/navigation';
+	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
 
 	export let data: PageData;
 
-	let selectedDifficulty = '';
+	let selectedDifficulty = $page.url.searchParams.get('difficulty') || 'all';
 	let selectedEquipment = '';
 	let showFavorites = false;
 	let searchTerm = '';
@@ -44,32 +45,29 @@
 	}
 
 	function handleLevel(level: string) {
-        selectedDifficulty = level;
-        const params = new URLSearchParams($page.url.searchParams);
+		selectedDifficulty = level;
+		const params = new URLSearchParams($page.url.searchParams);
 
-        if (level) {
-            params.set('difficulty', level);
-        } else {
-            params.delete('difficulty');
-        }
+		if (level && level !== 'all') {
+			params.set('difficulty', level);
+		} else {
+			params.delete('difficulty');
+		}
 
-        goto(`/entrenamiento?${params.toString()}`);
-    }
+		goto(`/entrenamiento?${params.toString()}`);
+	}
 
 	async function fetchNextPage() {
-		const nextPage = data.exercises.info.next
+		const nextPage = data.exercises.info.next;
 
-		$page.url.searchParams.set('p', nextPage)
-		const url = '/api/exercises?'
-		
-		const response = await fetch(url + $page.url.searchParams)
-		const jsonResponse = await response.json()
+		$page.url.searchParams.set('p', nextPage);
+		const url = '/api/exercises?';
 
-		data.exercises.info = jsonResponse.info
-		data.exercises.results = [
-			...data.exercises.results,
-			...jsonResponse.results
-		]
+		const response = await fetch(url + $page.url.searchParams);
+		const jsonResponse = await response.json();
+
+		data.exercises.info = jsonResponse.info;
+		data.exercises.results = [...data.exercises.results, ...jsonResponse.results];
 	}
 </script>
 
@@ -79,21 +77,8 @@
 	<aside class="entrenamiento__filters">
 		<h2 class="entrenamiento__filters-title">Filters</h2>
 
-		<FilterGroup
-			options={data.bodyParts}
-			onChange={handleGroupChange}
-		/>
-
-		<Filter
-			label="Difficulty"
-			options={[
-				{ value: 'beginner', text: 'Beginner' },
-				{ value: 'intermediate', text: 'Intermediate' },
-				{ value: 'advanced', text: 'Advanced' }
-			]}
-			id="difficulty"
-			onChange={handleLevel}
-		/>
+		<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected="all" />
+		<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
 
 		<FilterEquipment on:change={(e) => (selectedEquipment = e.detail)} />
 
