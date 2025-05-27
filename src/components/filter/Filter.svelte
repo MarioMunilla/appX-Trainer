@@ -2,12 +2,13 @@
     type FilterOption = {value: string, text: string}
 
     type FilterProps = {
+		id: string,
 		label: string,
         options: FilterOption[],
         onChange?: (newValue: string) => void
 	}
 
-    let { label, options, onChange }: FilterProps = $props()
+    let { label, options, id, onChange }: FilterProps = $props()
 
 	let selected = $state('');
 	
@@ -20,8 +21,8 @@
 </script>
 
 <div class="filter">
-	<label for="dificultad">{label}</label>
-	<select id="dificultad" onchange={handleChange} bind:value={selected}>
+	<label for={id}>{label}</label>
+	<select id={id} onchange={handleChange} bind:value={selected}>
 		{#each options as option (option.value)}
 			<option value={option.value}>{option.text}</option>
 		{/each}
