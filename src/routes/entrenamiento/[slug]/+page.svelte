@@ -21,7 +21,6 @@
 	async function loadExercise() {
 		try {
 			const response = await fetch(`/api/exercises/${slug}`);
-			console.log(response)
 			if (!response.ok) {
 				throw new Error('No se pudo cargar el ejercicio');
 			}
