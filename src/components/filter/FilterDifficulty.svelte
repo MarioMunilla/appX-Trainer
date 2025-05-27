@@ -12,4 +12,4 @@
 	{value: 'beginner', text: 'Beginner'},
 	{value: 'intermediate', text: 'Intermediate'},
 	{value: 'advanced', text: 'Advanced'}
-]} {onChange} />
+]} id="difficulty" {onChange} />
