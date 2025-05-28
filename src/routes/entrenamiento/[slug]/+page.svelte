@@ -1,41 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import type { Fetch } from '@supabase/supabase-js/dist/module/lib/types';
+	import type { PageData } from './$types';
 
-	let slug = '';
-
-	type ExerciseProps = {
-		name: string;
-		bodyParts: string[];
-		imgURL: string;
-		slug: string;
-	};
-
-	let exercise: ExerciseProps | null = null;
-	let error: string | null = null;
-
-	$: slug = $page.params.slug;
-
-	async function loadExercise() {
-		try {
-			const response = await fetch(`/api/exercises/${slug}`);
-			if (!response.ok) {
-				throw new Error('No se pudo cargar el ejercicio');
-			}
-			exercise = await response.json();
-		} catch (e) {
-			if (e instanceof Error) {
-				error = e.message;
-			} else {
-				error = 'Ocurrió un error desconocido';
-			}
-			exercise = null;
-		}
-	}
-
-	onMount(loadExercise);
+	export let data: PageData;
+	const exercise = data.exercise;
 
 	function goBack() {
 		goto('/entrenamiento');
@@ -48,95 +16,163 @@
 	function addToRoutine() {
 		// Implementar lógica de rutina
 	}
+
+	function renderStars(difficulty: string) {
+		const levels = { beginner: 1, intermediate: 3, advanced: 5 };
+		const count = levels[difficulty] ?? 0;
+		return '★'.repeat(count) + '☆'.repeat(5 - count);
+	}
 </script>
 
-<section class="exercise-detail">
-	<button class="back-button" on:click={goBack}>◄ Volver</button>
+<main class="exercise-detail">
+	<nav class="exercise-detail__nav">
+		<button class="exercise-detail__button" on:click={goBack}>◄ Volver</button>
+	</nav>
 
-	{#if error}
-		<p class="error">{error}</p>
-	{:else if exercise}
-		<div class="exercise-detail__layout">
-			<div class="exercise-detail__image">
-				<img src={exercise.imgURL} alt={exercise.name} />
-			</div>
+	{#if exercise}
+		<article class="exercise-detail__content">
+			<figure class="exercise-detail__media">
+				{#if exercise.gif_url.endsWith('.mp4')}
+					<video autoplay loop muted playsinline class="exercise-detail__video">
+						<source src={`/exercises/${exercise.gif_url}`} type="video/mp4" />
+					</video>
+				{:else}
+					<img
+						class="exercise-detail__image"
+						src={`/exercises/${exercise.gif_url}`}
+						alt={exercise.name}
+					/>
+				{/if}
+				<figcaption class="exercise-detail__caption">{exercise.name}</figcaption>
+			</figure>
 
-			<div class="exercise-detail__info">
-				<h1>{exercise.name}</h1>
-				<p><strong>Grupo muscular:</strong> {exercise.bodyParts.join(', ')}</p>
+			<section class="exercise-detail__info">
+				<header class="exercise-detail__header">
+					<h1 class="exercise-detail__title">{exercise.name}</h1>
+				</header>
 
-				<div class="exercise-detail__actions">
-					<button on:click={addToFavorites}>⭐ Añadir a favoritos</button>
-					<button on:click={addToRoutine}>➕ Añadir a rutina</button>
-				</div>
-			</div>
-		</div>
+				<p class="exercise-detail__text"><strong>Descripción:</strong> {exercise.description}</p>
+				<p class="exercise-detail__text"><strong>Dificultad:</strong> {renderStars(exercise.difficulty)}</p>
+				<p class="exercise-detail__text"><strong>Grupo muscular:</strong> {exercise.bodyPart}</p>
+				<p class="exercise-detail__text"><strong>Equipo necesario:</strong> {exercise.equipment}</p>
+
+				<footer class="exercise-detail__footer">
+					<button class="exercise-detail__action" on:click={addToFavorites}>⭐ Añadir a favoritos</button>
+					<button class="exercise-detail__action" on:click={addToRoutine}>➕ Añadir a rutina</button>
+				</footer>
+			</section>
+		</article>
 	{:else}
-		<p>Cargando ejercicio...</p>
+		<p class="exercise-detail__error">No se pudo cargar el ejercicio.</p>
 	{/if}
-</section>
+</main>
 
 <style>
+.exercise-detail {
+	padding: 2rem;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.exercise-detail__nav {
+	margin-bottom: 2rem;
+}
+
+.exercise-detail__button {
+	background: none;
+	border: none;
+	color: #007bff;
+	cursor: pointer;
+	font-size: 1rem;
+}
+
+.exercise-detail__content {
+	display: grid;
+	grid-template-columns: 1fr 1.5fr;
+	gap: 2rem;
+	align-items: flex-start;
+}
+
+.exercise-detail__media {
+	margin: 0;
+}
+
+.exercise-detail__image,
+.exercise-detail__video {
+	width: 100%;
+	border-radius: 1rem;
+	box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
+	object-fit: cover;
+}
+
+.exercise-detail__caption {
+	margin-top: 0.5rem;
+	font-size: 1rem;
+	color: #666;
+	text-align: center;
+}
+.exercise-detail__info {
+	display: flex;
+	flex-direction: column;
+}
+
+.exercise-detail__header {
+	margin-bottom: 1rem;
+}
+
+.exercise-detail__title {
+	font-size: 2rem;
+	margin: 0;
+}
+
+.exercise-detail__text {
+	margin: 0.5rem 0;
+	line-height: 1.6;
+}
+
+.exercise-detail__footer {
+	margin-top: 2rem;
+}
+
+.exercise-detail__action {
+	margin-right: 1rem;
+	padding: 0.6rem 1.2rem;
+	border: none;
+	border-radius: 0.4rem;
+	background-color: #f0f0f0;
+	cursor: pointer;
+}
+
+.exercise-detail__action:hover {
+	background-color: #e0e0e0;
+}
+.exercise-detail__error {
+	color: #dc3545;
+	background-color: #f8d7da;
+	padding: 1rem;
+	border-radius: 0.4rem;
+	text-align: center;
+}
+
+@media (max-width: 1024px) {
+	.exercise-detail__content {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 600px) {
 	.exercise-detail {
-		max-width: 120rem;
-		margin: 0 auto;
-		padding: 2rem;
+		padding: 1rem;
 	}
 
-	.back-button {
-		margin-bottom: 1rem;
-		background: none;
-		border: none;
-		color: #007bff;
-		cursor: pointer;
-		font-size: 1rem;
+	.exercise-detail__title {
+		font-size: 1.6rem;
 	}
 
-	.exercise-detail__layout {
-		display: grid;
-		grid-template-columns: 1fr 2fr;
-		gap: 2rem;
-	}
-
-	.exercise-detail__image img {
+	.exercise-detail__action {
+		display: block;
 		width: 100%;
-		border-radius: 1rem;
-		box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
-	}
-
-	.exercise-detail__info h1 {
-		font-size: 2rem;
-		margin-bottom: 1rem;
-	}
-
-	.exercise-detail__info p {
 		margin: 0.5rem 0;
 	}
-
-	.exercise-detail__actions button {
-		margin-right: 1rem;
-		padding: 0.6rem 1rem;
-		border: none;
-		border-radius: 0.4rem;
-		background-color: #f0f0f0;
-		cursor: pointer;
-		transition: background 0.2s ease;
-	}
-
-	.exercise-detail__actions button:hover {
-		background-color: #e0e0e0;
-	}
-
-	@media (max-width: 60rem) {
-		.exercise-detail__layout {
-			grid-template-columns: 1fr;
-		}
-	}
-
-	.error {
-		color: #dc3545;
-		padding: 1rem;
-		border-radius: 0.4rem;
-		background-color: #f8d7da;
-	}
+}
 </style>
