@@ -9,11 +9,13 @@ export const GET: RequestHandler = async ({ url }) => {
 	const search = (url.searchParams.get('q') ?? '').trim();
 	const group = url.searchParams.get('group');
 	const difficulty = url.searchParams.get('difficulty');
+	const favorites = url.searchParams.get('favorites') === 'true';
+	const userId = url.searchParams.get('user_id');
 
 	let builder = supabase.from('exercises').select('*', { count: 'exact' });
 
 	if (search !== '') {
-		builder.ilike('name', `%${search}%`);
+		builder = builder.ilike('name', `%${search}%`);
 	}
 
 	if (group && group !== 'all') {
@@ -24,6 +26,16 @@ export const GET: RequestHandler = async ({ url }) => {
 		builder = builder.ilike('difficulty', difficulty);
 	}
 
+	if (favorites && userId) {
+		// Obtener los favoritos del usuario
+		const { data: favs } = await supabase
+			.from('user_favorites')
+			.select('exercise_id')
+			.eq('user_id', userId);
+		const favIds = favs?.map(f => f.exercise_id) ?? [];
+		builder = builder.in('id', favIds);
+	}
+
 	builder = builder.range(page * RESULTS_PER_PAGE, page * RESULTS_PER_PAGE + RESULTS_PER_PAGE - 1);
 
 	const { data, error: queryError, count } = await builder;
@@ -32,7 +44,19 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(500, queryError.message);
 	}
 
-	const totalPages = Math.ceil(count! / RESULTS_PER_PAGE);
+	let results = data ?? [];
+
+	if (userId) {
+		// Obtener los favoritos del usuario
+		const { data: favs } = await supabase
+			.from('user_favorites')
+			.select('exercise_id')
+			.eq('user_id', userId);
+		const favSet = new Set(favs?.map(f => f.exercise_id));
+		results = results.map(ex => ({ ...ex, isFavorite: favSet.has(ex.id) }));
+	}
+
+	const totalPages = Math.ceil((count ?? 0) / RESULTS_PER_PAGE);
 	const previous = page === 0 ? null : page - 1;
 	const next = page >= totalPages - 1 ? null : page + 1;
 
@@ -43,6 +67,6 @@ export const GET: RequestHandler = async ({ url }) => {
 			prev: previous,
 			next: next
 		},
-		results: data
+		results: results
 	});
 };
