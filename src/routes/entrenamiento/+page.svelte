@@ -18,12 +18,12 @@
 	let searchTerm = '';
 	let searchTermGroup = '';
 	$: searchTerm = $page.url.searchParams.get('q') || '';
-	$: searchTermGroup = $page.url.searchParams.get('group') || '';
+	$: searchTermGroup = $page.url.searchParams.get('group') || 'all';
 
 	function handleGroupChange(group: string) {
 		const params = new URLSearchParams($page.url.searchParams);
 
-		if (group) {
+		if (group && group !== 'all') {
 			params.set('group', group);
 		} else {
 			params.delete('group');
@@ -77,11 +77,10 @@
 	<aside class="entrenamiento__filters">
 		<h2 class="entrenamiento__filters-title">Filters</h2>
 
-		<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected="all" />
+		<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
 		<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
 
 		<FilterEquipment on:change={(e) => (selectedEquipment = e.detail)} />
-
 		<FilterFavorites on:change={(e) => (showFavorites = e.detail)} />
 	</aside>
 
