@@ -3,19 +3,14 @@ import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabaseClient';
 
 export const GET: RequestHandler = async ({ params }) => {
-    const { slug } = params;
-    
-    const { data, error } = await supabase
-        .from('exercises')
-        .select('*')
-        .eq('slug', slug)
-        .single();
+	const { slug } = params;
 
-    if (error) {
-        return new Response(JSON.stringify({ error: 'Ejercicio no encontrado' }), {
-            status: 404
-        });
-    }
+	const { data, error } = await supabase.from('exercises').select('*').ilike('name', slug).single();
 
-    return json(data);
-}; 
+	if (error) {
+		return new Response(JSON.stringify({ error: 'Ejercicio no encontrado' }), {
+			status: 404
+		});
+	}
+	return json(data);
+};
