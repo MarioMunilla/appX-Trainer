@@ -1,69 +1,115 @@
 <script>
-  export let items = {};
+	export let items = {};
 
-  const entradas = Object.entries(items);
+	let isMenuOpen = false;
+	const entradas = Object.entries(items);
+
+	function toggleMenu() {
+		isMenuOpen = !isMenuOpen;
+	}
 </script>
 
 <nav class="nav">
-  <a href="/" class="nav__logo-link">
-    <img src="/favicon.png" alt="X-Trainner Logo" class="nav__logo" />
-  </a>
-  {#each entradas as [url, texto]}
-    <a class="nav__link" href={url}>{texto}</a>
-  {/each}
+	<a href="/" class="nav__logo-link" aria-label="Inicio">
+		<img src="/favicon.png" alt="X-Trainner Logo" class="nav__logo" />
+	</a>
+
+	<button class="nav__toggle" on:click={toggleMenu} aria-label="Menú">
+		☰
+	</button>
+
+	<div class="nav__links {isMenuOpen ? 'nav__links--open' : ''}">
+		{#each entradas as [url, texto]}
+			<a class="nav__link" href={url}>{texto}</a>
+		{/each}
+	</div>
 </nav>
 
 <style>
-  .nav {
-    background-color: #111827;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
-    padding: 1rem 2rem;
-    box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.2);
-    border-bottom: 0.2rem solid #1976d2;
-  }
+	.nav {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		background-color: #111827;
+		padding: 1.2rem 2rem;
+		box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.2);
+		border-bottom: 0.2rem solid #1976d2;
+		flex-wrap: wrap;
+		position: relative;
+	}
 
-  .nav__logo-link {
-    display: flex;
-    align-items: center;
-  }
+	.nav__logo-link {
+		display: flex;
+		align-items: center;
+	}
 
-  .nav__logo {
-    width: 4.5rem;
-    height: 4.5rem;
-    border-radius: 20%;
-    cursor: pointer;
-  }
+	.nav__logo {
+		width: 4.5rem;
+		height: 4.5rem;
+		border-radius: 0.8rem;
+		cursor: pointer;
+	}
 
-  .nav__link {
-    color: #ffffff;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1rem;
-    padding: 0.6rem 1.2rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
+	.nav__toggle {
+		display: none;
+		background: none;
+		border: none;
+		color: #fff;
+		font-size: 2.4rem;
+		cursor: pointer;
+	}
 
-  .nav__link:hover {
-    background-color: #1976d2;
-    transform: scale(1.05);
-  }
+	.nav__links {
+		display: flex;
+		gap: 1.5rem;
+		justify-content: center;
+		align-items: center;
+		flex-grow: 1;
+	}
 
-  @media (max-width: 40rem) {
-    .nav {
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
+	.nav__link {
+		color: #fff;
+		text-decoration: none;
+		font-size: 1.6rem;
+		font-weight: 600;
+		padding: 0.8rem 1.2rem;
+		border-radius: 0.5rem;
+		transition: background-color 0.3s ease, transform 0.2s ease;
+		text-align: center;
+	}
 
-    .nav__link {
-      font-size: 1rem;
-      width: 100%;
-      text-align: center;
-    }
-  }
+	.nav__link:hover {
+		background-color: #1976d2;
+		transform: scale(1.05);
+	}
+
+	@media (max-width: 768px) {
+		.nav__toggle {
+			display: block;
+		}
+
+		.nav__links {
+			display: none;
+			flex-direction: column;
+			width: 100%;
+			background-color: #111827;
+			position: absolute;
+			top: 100%;
+			left: 0;
+			padding: 1.5rem 2rem;
+			box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.2);
+			z-index: 10;
+		}
+
+		.nav__links--open {
+			display: flex;
+		}
+
+		.nav__link {
+			width: 100%;
+			font-size: 1.4rem;
+			padding: 1rem 0;
+			text-align: center;
+		}
+	}
 </style>
