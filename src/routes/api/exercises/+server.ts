@@ -12,31 +12,15 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	let builder = supabase.from('exercises').select('*', { count: 'exact' });
 
-	// |--------------------------------|         |-------------------------|
-	// |           exercises            |         |        body_parts       |
-	// |--------------------------------|         |-------------------------|
-	// | id | name | ... | body_part_id |         | id |        name        |
-	// ----------------------------------         ---------------------------
-	// | 3  | press |... |     4        |   -->   | 4  |       chest        |
-	// |--------------------------------|         |-------------------------|
-	//                                  Muchos a uno
-	//                         Un exercise solo una body_part
-
-	// Si se busca muchos a muchos, hay que cambiar esto a una tabla intermedia.
-	//							exercises_body_parts
-	//							  | id_ex | id_bp |
-	//                                4       4
-	//								  4       6
-
-	if (search != '') {
+	if (search !== '') {
 		builder.ilike('name', `%${search}%`);
 	}
 
-	if (group) {
+	if (group && group !== 'all') {
 		builder = builder.eq('body_part_id', group);
 	}
 
-	if (difficulty) {
+	if (difficulty && difficulty !== 'all') {
 		builder = builder.ilike('difficulty', difficulty);
 	}
 
@@ -49,12 +33,12 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	const totalPages = Math.ceil(count! / RESULTS_PER_PAGE);
-	const previous = page == 0 ? null : page - 1;
+	const previous = page === 0 ? null : page - 1;
 	const next = page >= totalPages - 1 ? null : page + 1;
 
 	return json({
 		info: {
-			count: count,
+			count,
 			pages: totalPages,
 			prev: previous,
 			next: next
