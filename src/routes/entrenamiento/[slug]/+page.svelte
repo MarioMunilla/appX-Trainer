@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import Stars from '../../../components/Stars.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -17,11 +18,7 @@
 		// Implementar lógica de rutina
 	}
 
-	function renderStars(difficulty: string) {
-		const levels = { beginner: 1, intermediate: 3, advanced: 5 };
-		const count = levels[difficulty] ?? 0;
-		return '★'.repeat(count) + '☆'.repeat(5 - count);
-	}
+	
 </script>
 
 <main class="exercise-detail">
@@ -52,9 +49,8 @@
 				</header>
 
 				<p class="exercise-detail__text"><strong>Descripción:</strong> {exercise.description}</p>
-				<p class="exercise-detail__text"><strong>Dificultad:</strong> {renderStars(exercise.difficulty)}</p>
 				<p class="exercise-detail__text"><strong>Grupo muscular:</strong> {exercise.bodyPart}</p>
-				<p class="exercise-detail__text"><strong>Equipo necesario:</strong> {exercise.equipment}</p>
+				Rating:<Stars />
 
 				<footer class="exercise-detail__footer">
 					<button class="exercise-detail__action" on:click={addToFavorites}>⭐ Añadir a favoritos</button>
