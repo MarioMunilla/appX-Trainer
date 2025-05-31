@@ -148,7 +148,7 @@
 
 .entrenamiento__filters {
 	grid-area: filters;
-	background-color: #f9f9f9;
+	background-color:#7e7979;
 	padding: 2rem;
 	border-radius: 1.2rem;
 	box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.05);
