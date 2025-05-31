@@ -31,7 +31,7 @@
     align-items: center;
     background-color: #ffffff;
     border-radius: 1rem;
-    box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.4rem 1rem rgba(7, 7, 7, 0.818);
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     width: 100%;
@@ -43,6 +43,7 @@
     width: 100%;
     height: 12.5rem;
     object-fit: cover;
+    box-shadow: green;
   }
 
   .exercise-card__content {
