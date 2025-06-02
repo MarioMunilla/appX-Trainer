@@ -1,11 +1,13 @@
 <script lang="ts">
 	import Face from '$lib/Face.svelte';
 
-	export let stars: number = 5;
-	export let current: number = -1;
-	export let rate: ((rating: number) => Promise<any> | void) | undefined = undefined;
+	const { stars = 5, rating = -1, rate } = $props();
 
-	$: active = current;
+	let active = $state(rating);
+
+	let current = $derived(() => {
+		return active;
+	});
 
 	let isAnimating: boolean = false;
 	let interval: ReturnType<typeof setInterval> | undefined;
@@ -26,12 +28,10 @@
 			if (active === newCurrent) {
 				clearInterval(interval);
 				isAnimating = false;
-				current = active;
 
-				await rate?.(current);
+				await rate?.(current());
 
 				if (reset) {
-					current = -1;
 					active = -1;
 				}
 
@@ -41,6 +41,7 @@
 		}, 200);
 	}
 </script>
+
 
 <div class="rating">
 	<ul>
@@ -52,8 +53,8 @@
 					class:highlighted={i === active}
 					class:active-3={i === active && i === 3}
 					class:active-4={i === active && i === 4}
-					on:click={() => handleClick(i)}
-					on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick(i)}
+					onclick={() => handleClick(i)}
+					onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick(i)}
 					aria-label={`Calificar con ${i + 1} estrellas`}
 				>
 					<section class="star-wrapper">
