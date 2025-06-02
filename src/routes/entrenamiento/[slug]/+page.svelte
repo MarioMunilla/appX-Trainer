@@ -6,19 +6,34 @@
 	export let data: PageData;
 	const exercise = data.exercise;
 
+	let userScore = exercise.userScore ?? -1;
+
+	async function rate(score: number) {
+		const res = await fetch(`/api/exercises/${exercise.name}`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ 
+				score,
+				id_user: '9844e6c1-0812-4f01-aa1b-1258abc17d65',
+				id_exercise:exercise.id
+			 })
+		});
+		if (res.ok) {
+			userScore = score;
+		}
+	}
+
 	function goBack() {
 		goto('/entrenamiento');
 	}
 
 	function addToFavorites() {
-		// Implementar lógica de favoritos
+		// Lógica de favoritos
 	}
 
 	function addToRoutine() {
-		// Implementar lógica de rutina
+		// Lógica de rutina
 	}
-
-	
 </script>
 
 <main class="exercise-detail">
@@ -50,7 +65,7 @@
 
 				<p class="exercise-detail__text"><strong>Descripción:</strong> {exercise.description}</p>
 				<p class="exercise-detail__text"><strong>Grupo muscular:</strong> {exercise.bodyPart}</p>
-				Rating:<Stars />
+				<Stars rating={userScore} rate={rate} />
 
 				<footer class="exercise-detail__footer">
 					<button class="exercise-detail__action" on:click={addToFavorites}>⭐ Añadir a favoritos</button>
