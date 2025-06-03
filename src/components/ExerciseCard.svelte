@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HeartIcon from '$lib/components/HeartIcon.svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	type ExerciseCardProps = {
 		id: string;
@@ -18,13 +19,13 @@
 	let userId = '9844e6c1-0812-4f01-aa1b-1258abc17d65';
 
 	let element: HTMLElement;
-
+	const dispatch = createEventDispatcher();
 	async function handleHeartClick(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
 
 		const newFavoriteState = !isFavoriteLocal;
-
+		console.log(newFavoriteState);
 		const res = await fetch('/api/exercises', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -37,16 +38,8 @@
 
 		if (res.ok) {
 			isFavoriteLocal = newFavoriteState;
-
-			const customEvent = new CustomEvent('update', {
-				detail: {
-					exercise_id: id,
-					favorite: newFavoriteState
-				},
-				bubbles: true,
-				composed: true
-			});
-			element.dispatchEvent(customEvent);
+			console.log(isFavoriteLocal)
+			dispatch('update');
 		}
 	}
 </script>
