@@ -9,7 +9,6 @@
 	import { goto } from '$app/navigation';
 	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
 	import { supabase } from '$lib/supabaseClient';
-	import { onMount } from 'svelte';
 
 	export let data: PageData;
 
@@ -26,12 +25,7 @@
 	function handleGroupChange(group: string) {
 		const params = new URLSearchParams($page.url.searchParams);
 		params.delete('p');
-
-		if (group && group !== 'all') {
-			params.set('group', group);
-		} else {
-			params.delete('group');
-		}
+		group !== 'all' ? params.set('group', group) : params.delete('group');
 		goto(`/entrenamiento?${params.toString()}`);
 	}
 
@@ -39,20 +33,13 @@
 		selectedDifficulty = level;
 		const params = new URLSearchParams($page.url.searchParams);
 		params.delete('p');
-
-		if (level && level !== 'all') {
-			params.set('difficulty', level);
-		} else {
-			params.delete('difficulty');
-		}
-
+		level !== 'all' ? params.set('difficulty', level) : params.delete('difficulty');
 		goto(`/entrenamiento?${params.toString()}`);
 	}
 
 	async function handleFavoritesChange(e: CustomEvent<boolean>) {
 		const newValue = e.detail;
 		if (newValue && !userId) {
-			console.log(newValue);
 			const { data: userData } = await supabase.auth.getUser();
 			if (userData?.user) {
 				userId = userData.user.id;
@@ -61,20 +48,11 @@
 				return;
 			}
 		}
-
 		showFavorites = newValue;
-
 		const params = new URLSearchParams($page.url.searchParams);
-
-		if (showFavorites && userId) {
-			console.log(showFavorites);
-			params.set('favorites', 'true');
-			params.set('user_id', userId);
-		} else {
-			params.delete('favorites');
-			params.delete('user_id');
-		}
-
+		showFavorites && userId
+			? (params.set('favorites', 'true'), params.set('user_id', userId))
+			: (params.delete('favorites'), params.delete('user_id'));
 		goto(`/entrenamiento?${params.toString()}`);
 	}
 
@@ -82,10 +60,8 @@
 		const nextPage = data.exercises.info.next;
 		const params = new URLSearchParams($page.url.searchParams);
 		params.set('p', nextPage?.toString() ?? '0');
-
 		const response = await fetch(`/api/exercises?${params.toString()}`);
 		const jsonResponse = await response.json();
-
 		data.exercises.info = jsonResponse.info;
 		data.exercises.results = [...data.exercises.results, ...jsonResponse.results];
 	}
@@ -96,13 +72,9 @@
 
 	<aside class="entrenamiento__filters">
 		<h2 class="entrenamiento__filters-title">Filters</h2>
-
 		<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
-
 		<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
-
 		<FilterEquipment on:change={(e) => (selectedEquipment = e.detail)} />
-
 		<FilterFavorites bind:checked={showFavorites} on:change={handleFavoritesChange} />
 	</aside>
 
@@ -138,6 +110,7 @@
 			'filters content';
 		grid-template-columns: 1fr 3fr;
 		gap: 2rem;
+		background-color: #cbd5e1;
 	}
 
 	:global(.entrenamiento > :first-child) {
@@ -146,10 +119,11 @@
 
 	.entrenamiento__filters {
 		grid-area: filters;
-		background-color: #7e7979;
+		background-color: #f8f8f8;
 		padding: 2rem;
 		border-radius: 1.2rem;
-		box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.05);
+		box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
+		border: 1px solid #dddddd;
 	}
 
 	.entrenamiento__filters-title {
@@ -166,9 +140,11 @@
 
 	.entrenamiento__grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 		gap: 2rem;
+		width: 100%;
 	}
+
 	.no-results {
 		grid-column: 1 / -1;
 		text-align: center;
@@ -176,6 +152,7 @@
 		color: #e41654;
 		padding: 2rem;
 	}
+
 	.load-more {
 		align-self: center;
 		padding: 1rem 2rem;
@@ -194,17 +171,19 @@
 
 	@media (max-width: 1024px) {
 		.entrenamiento {
-			grid-template-columns: 1fr;
-			grid-template-areas:
-				'search'
-				'filters'
-				'content';
+			display: flex;
+			flex-direction: column;
+		}
+
+		.entrenamiento__filters,
+		.entrenamiento__content {
+			width: 100%;
 		}
 	}
 
 	@media (max-width: 600px) {
 		.entrenamiento {
-			padding: 0.5rem;
+			padding: 1rem;
 		}
 
 		.entrenamiento__filters {
@@ -216,8 +195,7 @@
 		}
 
 		.load-more {
-			width: 50%;
-			padding: auto 0 0 1em;
+			width: 60%;
 			font-size: 1.4rem;
 		}
 	}
