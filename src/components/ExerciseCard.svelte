@@ -11,7 +11,7 @@
 		isFavorite: boolean;
 	};
 
-	let {id, name, gif_url, difficulty, isFavorite }: ExerciseCardProps = $props();
+	let { id, name, gif_url, difficulty, isFavorite }: ExerciseCardProps = $props();
 
 	const isGif = gif_url?.endsWith('.gif') ?? false;
 	let isFavoriteLocal = $state(isFavorite);
@@ -38,7 +38,7 @@
 
 		if (res.ok) {
 			isFavoriteLocal = newFavoriteState;
-			console.log(isFavoriteLocal)
+			console.log(isFavoriteLocal);
 			dispatch('update');
 		}
 	}
@@ -84,8 +84,10 @@
 		transition:
 			transform 0.2s ease,
 			box-shadow 0.2s ease;
+		max-width: 25rem;
 		width: 100%;
 		text-decoration: none;
+		margin: 0 auto;
 		color: inherit;
 	}
 	.heart-button {
