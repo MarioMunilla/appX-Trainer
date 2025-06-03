@@ -54,4 +54,21 @@ async function handleSubmit(event: Event) {
 	.search-button:hover {
 		background-color: #1565c0;
 	}
+
+	@media (max-width: 768px) {
+		.search-bar {
+			flex-direction: column;
+		}
+
+		.search-input,
+		.search-button {
+			width: 100%;
+			font-size: 1.1rem;
+		}
+
+		.search-button {
+			padding: 1rem;
+		}
+	}
 </style>
+

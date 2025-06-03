@@ -1,6 +1,5 @@
 <script>
 	export let items = {};
-
 	let isMenuOpen = false;
 	const entradas = Object.entries(items);
 
@@ -18,7 +17,7 @@
 		☰
 	</button>
 
-	<div class="nav__links {isMenuOpen ? 'nav__links--open' : ''}">
+	<div class="nav__links" class:nav__links--open={isMenuOpen}>
 		{#each entradas as [url, texto]}
 			<a class="nav__link" href={url}>{texto}</a>
 		{/each}
@@ -36,11 +35,6 @@
 		border-bottom: 0.2rem solid #1976d2;
 		flex-wrap: wrap;
 		position: relative;
-	}
-
-	.nav__logo-link {
-		display: flex;
-		align-items: center;
 	}
 
 	.nav__logo {
@@ -109,7 +103,6 @@
 			width: 100%;
 			font-size: 1.4rem;
 			padding: 1rem 0;
-			text-align: center;
 		}
 	}
 </style>
