@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    
+
     const dispatch = createEventDispatcher();
     export let checked = false;
 
@@ -14,8 +14,8 @@
     <label>
         <input 
             type="checkbox" 
-            on:change={handleToggle} 
-            bind:checked 
+            bind:checked
+            on:change={handleToggle}
         />
         Favorites
     </label>
