@@ -32,24 +32,29 @@
 		margin: 0.3rem 0;
 	}
 
-	.footer__copyright {
+	.footer__copyright,
+	.footer__tagline {
 		margin: 0;
 		font-weight: 300;
 	}
 
 	.footer__tagline {
-		margin: 0;
 		font-size: 0.8rem;
-		font-weight: 300;
 		letter-spacing: 1px;
 		text-transform: uppercase;
 		color: #4fc3f7;
 		opacity: 0.8;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 600px) {
 		.footer {
-			padding: 1rem;
+			padding: 1rem 1.5rem;
+		}
+
+		.footer__content {
+			flex-direction: column;
+			text-align: center;
+			gap: 1rem;
 		}
 	}
 </style>
