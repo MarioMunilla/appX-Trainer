@@ -14,48 +14,27 @@
 	let { id, name, gif_url, difficulty, isFavorite }: ExerciseCardProps = $props();
 
 	const isGif = gif_url?.endsWith('.gif') ?? false;
-	let isFavoriteLocal = $state(isFavorite);
-
-	let userId = '9844e6c1-0812-4f01-aa1b-1258abc17d65';
-
-	let element: HTMLElement;
 	const dispatch = createEventDispatcher();
-	async function handleHeartClick(event: MouseEvent) {
+
+	function handleHeartClick(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
-
-		const newFavoriteState = !isFavoriteLocal;
-		console.log(newFavoriteState);
-		const res = await fetch('/api/exercises', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				user_id: userId,
-				exercise_id: id,
-				favorite: newFavoriteState
-			})
-		});
-
-		if (res.ok) {
-			isFavoriteLocal = newFavoriteState;
-			console.log(isFavoriteLocal);
-			dispatch('update');
-		}
+		const newState = !isFavorite;
+		dispatch('favoriteClick', { id, newState });
 	}
 </script>
 
 <a
-	bind:this={element}
 	class="exercise-card exercise-card--{difficulty}"
-	href={`/entrenamiento/${name}`}
+	href={`/exercise/${name}`}
 >
 	<button
 		type="button"
 		class="heart-button"
 		onclick={handleHeartClick}
-		aria-label={isFavoriteLocal ? 'Quitar de favoritos' : 'Marcar como favorito'}
+		aria-label={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
 	>
-		<HeartIcon filled={isFavoriteLocal} />
+		<HeartIcon filled={isFavorite} />
 	</button>
 
 	{#if isGif}
@@ -70,6 +49,7 @@
 		<h2 class="exercise-card__title">{name}</h2>
 	</div>
 </a>
+
 
 <style>
 	.exercise-card {
