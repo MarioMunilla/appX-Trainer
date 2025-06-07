@@ -8,7 +8,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const page = Number(url.searchParams.get('p') ?? '0');
 	const search = (url.searchParams.get('q') ?? '').trim();
 	const group = url.searchParams.get('group');
-	const difficulty = url.searchParams.get('difficulty');
+	const difficulty = url.searchParams.get('difficulty')?.toLocaleLowerCase();
 	const favorites = url.searchParams.get('favorites') === 'true';
 	const id_user = url.searchParams.get('user_id') ?? null;
 
@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	if (difficulty && difficulty !== 'all') {
-		builder = builder.eq('difficulty', difficulty);
+		builder = builder.ilike('difficulty', difficulty);
 	}
 
 	if (favorites && id_user) {
