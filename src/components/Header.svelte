@@ -5,8 +5,8 @@
 <header>
     <MenuNavegacion
         items={{
-            '/desafio-diario': 'Desafío diario',
-            '/entrenamiento': 'Entrenamiento'
+            '/exercise': 'Exercise',
+            '/routine':'Routine'
         }}
     />
 </header>
