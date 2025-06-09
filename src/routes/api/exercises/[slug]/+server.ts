@@ -38,12 +38,8 @@ export const POST: RequestHandler = async ({ params, request }) => {
 	const { slug } = params;
 
 	const body = await request.json();
-	console.log(' Body recibido en el servidor:', body);
 
-	const { score, id_user, id_exercise } = body;
-	console.log(' Score extraído:', score);
-	console.log('id_user:', id_user);
-	console.log(' id_exercise:', id_exercise);
+	const { score, id_user } = body;
 
 	if (typeof score !== 'number') {
 		console.error('Score no válido:', score);
