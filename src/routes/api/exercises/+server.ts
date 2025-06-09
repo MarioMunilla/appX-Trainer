@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabaseClient';
 
-const RESULTS_PER_PAGE = 6;
+const RESULTS_PER_PAGE = 8;
 
 export const GET: RequestHandler = async ({ url }) => {
 	const page = Number(url.searchParams.get('p') ?? '0');
@@ -11,8 +11,6 @@ export const GET: RequestHandler = async ({ url }) => {
 	const difficulty = url.searchParams.get('difficulty')?.toLocaleLowerCase();
 	const favorites = url.searchParams.get('favorites') === 'true';
 	const id_user = url.searchParams.get('user_id') ?? null;
-
-	console.log('Parámetros recibidos:', { page, search, group, difficulty, favorites, id_user });
 
 	let builder = supabase.from('exercises').select('*', { count: 'exact' });
 
@@ -39,7 +37,6 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		if (favIds.length === 0) {
 			// No tiene favoritos, devolvemos lista vacía
-			console.log('Hola?');
 			return json({
 				info: {
 					count: 0,
@@ -93,21 +90,32 @@ export const GET: RequestHandler = async ({ url }) => {
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
-		const { exercise_id, user_id } = await request.json();
+		const { exercise_id, user_id, favorite } = await request.json();
 
 		if (!exercise_id || !user_id) {
 			throw error(400, 'exercise_id y user_id son obligatorios');
 		}
 
-		const { data, error: insertError } = await supabase
-			.from('user_favorites')
-			.upsert({ exercise_id, user_id }, { onConflict: 'exercise_id, user_id' });
+		if (favorite) {
+			const { error: insertError } = await supabase
+				.from('user_favorites')
+				.upsert({ exercise_id, user_id }, { onConflict: 'exercise_id, user_id' });
 
-		if (insertError) {
-			throw error(500, insertError.message);
+			if (insertError) {
+				throw error(500, insertError.message);
+			}
+		} else {
+			const { error: deleteError } = await supabase
+				.from('user_favorites')
+				.delete()
+				.eq('exercise_id', exercise_id)
+				.eq('user_id', user_id);
+			if (deleteError) {
+				throw error(500, deleteError.message);
+			}
 		}
 
-		return json({ success: true, data });
+		return json({ success: true });
 	} catch (err) {
 		return json({ success: false, message: (err as Error).message }, { status: 400 });
 	}
