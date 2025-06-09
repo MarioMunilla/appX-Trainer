@@ -32,7 +32,7 @@
 	}
 
 	async function addToRoutine() {
-	const res = await fetch(`/api/user_routines/${exercise.id}`, {
+	const res = await fetch(`/api/routines/${exercise.id}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
@@ -40,7 +40,7 @@
 			exercise_id: exercise.id
 		})
 	});
-	console.log(res)
+	
 	if (res.ok) {
 		alert('Ejercicio añadido a tu rutina');
 	} else {
