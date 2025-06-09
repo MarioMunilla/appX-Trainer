@@ -8,19 +8,17 @@
 	import FilterGroup from '../../components/filter/FilterGroup.svelte';
 	import { goto } from '$app/navigation';
 	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
-	import { supabase } from '$lib/supabaseClient';
 
-	export let data: PageData;
+	let { data }: { data: PageData } = $props();
 
 	let selectedDifficulty = $page.url.searchParams.get('difficulty') || 'all';
 	let selectedEquipment = '';
 	let showFavorites = $page.url.searchParams.get('favorites') === 'true';
-	let searchTerm = '';
-	let searchTermGroup = '';
+	let searchTerm = $page.url.searchParams.get('q') || '';
+	let searchTermGroup = $page.url.searchParams.get('group') || 'all';
 	let userId: string = '9844e6c1-0812-4f01-aa1b-1258abc17d65';
 
-	$: searchTerm = $page.url.searchParams.get('q') || '';
-	$: searchTermGroup = $page.url.searchParams.get('group') || 'all';
+	let loading = false;
 
 	function handleGroupChange(group: string) {
 		const params = new URLSearchParams($page.url.searchParams);
@@ -51,35 +49,60 @@
 		goto(`/exercise?${params.toString()}`);
 	}
 
-	async function handleFavoriteToggle(id: string, newState: boolean) {
+	async function handleFavoriteToggle(id: string, isFavorite: boolean) {
 		const res = await fetch('/api/exercises', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				user_id: userId,
 				exercise_id: id,
-				favorite: newState
+				favorite: isFavorite
 			})
 		});
-		console.log('Respuesta fetch', res)
 		if (res.ok) {
-			const index = data.exercises.results.findIndex((e: { id: string; }) => e.id === id);
-			if (index !== -1) {
-				data.exercises.results[index].isFavorite = newState;
+			const exercise = data.exercises.results.find((e: { id: string }) => e.id === id);
+			if (exercise) {
+				exercise.isFavorite = isFavorite;
 			}
+			data = {
+				...data,
+				exercises: {
+					info: data.exercises.info,
+					results: [...data.exercises.results]
+				}
+			};
 		} else {
 			console.error('Error al actualizar favorito');
+			console.error(res);
 		}
 	}
 
 	async function fetchNextPage() {
+		if (loading || !data.exercises.info.next) return;
+		loading = true;
+
 		const nextPage = data.exercises.info.next;
 		const params = new URLSearchParams($page.url.searchParams);
-		params.set('p', nextPage?.toString() ?? '0');
+		params.set('p', nextPage.toString());
+
 		const response = await fetch(`/api/exercises?${params.toString()}`);
+		if (!response.ok) {
+			loading = false;
+			console.error('Error al cargar más ejercicios');
+			return;
+		}
+
 		const jsonResponse = await response.json();
-		data.exercises.info = jsonResponse.info;
-		data.exercises.results = [...data.exercises.results, ...jsonResponse.results];
+
+		data = {
+			...data,
+			exercises: {
+				info: jsonResponse.info,
+				results: [...data.exercises.results, ...jsonResponse.results]
+			}
+		};
+
+		loading = false;
 	}
 </script>
 
@@ -103,19 +126,24 @@
 					bodyParts={[exercise.bodyPart]}
 					gif_url={exercise.gif_url}
 					difficulty={exercise.difficulty}
-					isFavorite={exercise.isFavorite ?? false}
-					on:favoriteClick={(e) => handleFavoriteToggle(e.detail.id, e.detail.newState)}
+					isFavorite={exercise.isFavorite}
+					onFavoriteChange={(isFavorite) => handleFavoriteToggle(exercise.id, isFavorite)}
 				/>
 			{:else}
 				<p class="no-results">No se encontraron ejercicios para tu búsqueda.</p>
 			{/each}
 		</div>
+
 		{#if data.exercises.info.next}
-			<button on:click={fetchNextPage} class="load-more">Cargar más</button>
+			<button onclick={fetchNextPage} class="load-more" disabled={loading}>
+				{#if loading}Cargando...
+				{:else}
+					Cargar más
+				{/if}
+			</button>
 		{/if}
 	</main>
 </section>
-
 
 <style>
 	.exercise {
@@ -183,7 +211,12 @@
 		transition: background-color 0.2s ease-in-out;
 	}
 
-	.load-more:hover {
+	.load-more:disabled {
+		background-color: #94a3b8;
+		cursor: not-allowed;
+	}
+
+	.load-more:hover:enabled {
 		background-color: #2563eb;
 	}
 
