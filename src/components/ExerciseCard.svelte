@@ -1,6 +1,5 @@
 <script lang="ts">
 	import HeartIcon from '$lib/components/HeartIcon.svelte';
-	import { createEventDispatcher } from 'svelte';
 
 	type ExerciseCardProps = {
 		id: string;
@@ -9,18 +8,21 @@
 		gif_url: string;
 		difficulty: 'beginner' | 'intermediate' | 'advanced';
 		isFavorite: boolean;
+		onFavoriteChange: (isFavorite: boolean) => void
 	};
 
-	let { id, name, gif_url, difficulty, isFavorite }: ExerciseCardProps = $props();
+	let { id, name, gif_url, difficulty, isFavorite, onFavoriteChange }: ExerciseCardProps = $props();
 
+	$effect(() => {
+		console.log('isFavorite prop: ' + isFavorite)
+	})
+	
 	const isGif = gif_url?.endsWith('.gif') ?? false;
-	const dispatch = createEventDispatcher();
 
 	function handleHeartClick(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
-		const newState = !isFavorite;
-		dispatch('favoriteClick', { id, newState });
+		onFavoriteChange(!isFavorite)
 	}
 </script>
 
@@ -34,7 +36,7 @@
 		onclick={handleHeartClick}
 		aria-label={isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
 	>
-		<HeartIcon filled={isFavorite} />
+		<HeartIcon {isFavorite} />
 	</button>
 
 	{#if isGif}
