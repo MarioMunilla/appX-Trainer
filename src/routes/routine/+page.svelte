@@ -1,19 +1,21 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
+
 	export let data: PageData;
 
-	let user_id = $page.url.searchParams.get('user_id');
+	let routine_id = data.routine_id;
 	let title = 'Mi rutina pro!';
 	let description = 'Descripción de la rutina';
 
-	// Estado local para cada ejercicio
-	let exercises = data.exercises.map((item: any, index: number) => ({
+	const user_id = '9844e6c1-0812-4f01-aa1b-1258abc17d65';
+
+	// Evitar error si data.exercises no está definido
+	let exercises = (data.exercises ?? []).map((item: any, index: number) => ({
 		...item,
-		weight: 10 * (index + 1) // Valor inicial ficticio
+		weight: 10 * (index + 1)
 	}));
 
-	// Funciones para cambiar peso y reordenar
 	function incrementWeight(index: number) {
 		exercises[index].weight += 5;
 	}
@@ -33,13 +35,36 @@
 			[exercises[index], exercises[index + 1]] = [exercises[index + 1], exercises[index]];
 		}
 	}
-</script>
 
+	async function saveRoutine() {
+		if (!user_id) {
+			console.warn('user_id no encontrado');
+			alert('No se puede guardar la rutina porque falta user_id');
+			return;
+		}
+
+		const res = await fetch(`/api/routines/${routine_id}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				user_id,
+				name: title,
+				description
+			})
+		});
+
+		if (!res.ok) {
+			alert('Error al guardar la rutina');
+		} else {
+			alert('Rutina guardada exitosamente');
+		}
+	}
+</script>
 
 <div class="routine-container">
 	<div class="header">
 		<input type="text" bind:value={title} />
-		<button>💾 Guardar</button>
+		<button onclick={saveRoutine}>💾 Guardar</button>
 	</div>
 
 	<input type="text" bind:value={description} placeholder="Descripción" />
@@ -50,13 +75,12 @@
 				<li class="exercise-item">
 					<div class="exercise-header">
 						<span>{item.exercises.name}</span>
-
 						<div class="exercise-controls">
-							<button on:click={() => decrementWeight(index)}>-</button>
+							<button onclick={() => decrementWeight(index)}>-</button>
 							<span>{item.weight}</span>
-							<button on:click={() => incrementWeight(index)}>+</button>
-							<button on:click={() => moveUp(index)}>▲</button>
-							<button on:click={() => moveDown(index)}>▼</button>
+							<button onclick={() => incrementWeight(index)}>+</button>
+							<button onclick={() => moveUp(index)}>▲</button>
+							<button onclick={() => moveDown(index)}>▼</button>
 						</div>
 					</div>
 
@@ -75,7 +99,7 @@
 	{/if}
 
 	<div class="footer">
-		<button>💾 Guardar</button>
+		<button onclick={saveRoutine}>💾 Guardar</button>
 	</div>
 </div>
 
@@ -87,14 +111,12 @@
 		border: 1px solid #ccc;
 		border-radius: 1rem;
 	}
-
 	.header, .footer {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 1rem;
 	}
-
 	input[type="text"] {
 		width: 100%;
 		padding: 0.5rem;
@@ -102,26 +124,22 @@
 		border-radius: 0.5rem;
 		border: 1px solid #ccc;
 	}
-
 	.exercise-item {
 		border-top: 1px solid #ccc;
 		padding: 1rem 0;
 		display: flex;
 		flex-direction: column;
 	}
-
 	.exercise-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 	}
-
 	.exercise-controls {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 	}
-
 	button {
 		border: 1px solid #333;
 		background: white;
@@ -129,7 +147,6 @@
 		cursor: pointer;
 		padding: 0.25rem 0.5rem;
 	}
-
 	video, img {
 		margin-top: 0.5rem;
 		width: 100%;
@@ -137,4 +154,3 @@
 		object-fit: cover;
 	}
 </style>
-
