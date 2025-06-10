@@ -13,13 +13,17 @@
 		<img src="/favicon.png" alt="X-Trainner Logo" class="nav__logo" />
 	</a>
 
-	<button class="nav__toggle" on:click={toggleMenu} aria-label="Menú">
-		☰
-	</button>
+	<button class="nav__toggle" on:click={toggleMenu} aria-label="Menú"> ☰ </button>
 
 	<div class="nav__links" class:nav__links--open={isMenuOpen}>
-		{#each entradas as [url, texto]}
-			<a class="nav__link" href={url}>{texto}</a>
+		{#each entradas as [url, contenido]}
+			{#if typeof contenido === 'string'}
+				<a class="nav__link" href={url}>{contenido}</a>
+			{:else}
+				<a class="nav__link nav__link--component" href={url}>
+					<svelte:component this={contenido} />
+				</a>
+			{/if}
 		{/each}
 	</div>
 </nav>
@@ -68,7 +72,9 @@
 		font-weight: 600;
 		padding: 0.8rem 1.2rem;
 		border-radius: 0.5rem;
-		transition: background-color 0.3s ease, transform 0.2s ease;
+		transition:
+			background-color 0.3s ease,
+			transform 0.2s ease;
 		text-align: center;
 	}
 
@@ -76,6 +82,11 @@
 		background-color: #1976d2;
 		transform: scale(1.05);
 	}
+	/* .nav__link--component {
+		display: flex;
+		align-items: flex-end;
+		
+	}  */
 
 	@media (max-width: 768px) {
 		.nav__toggle {

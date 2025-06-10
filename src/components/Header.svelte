@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Login from "$lib/components/Login.svelte";
 	import MenuNavegacion from "./MenuNavegacion.svelte";
 </script>
 
@@ -6,7 +7,8 @@
     <MenuNavegacion
         items={{
             '/exercise': 'Exercise',
-            '/routine':'Routine'
+            '/routine':'Routine',
+            '/login':Login 
         }}
     />
 </header>
