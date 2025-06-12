@@ -4,7 +4,6 @@
 	import type { PageData } from './$types';
 	import ExerciseCard from '../../components/ExerciseCard.svelte';
 	import FilterFavorites from '../../components/filter/FilterFavorites.svelte';
-	import FilterEquipment from '../../components/filter/FilterEquipment.svelte';
 	import FilterGroup from '../../components/filter/FilterGroup.svelte';
 	import { goto } from '$app/navigation';
 	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
@@ -12,7 +11,6 @@
 	let { data }: { data: PageData } = $props();
 
 	let selectedDifficulty = $page.url.searchParams.get('difficulty') || 'all';
-	let selectedEquipment = '';
 	let showFavorites = $page.url.searchParams.get('favorites') === 'true';
 	let searchTerm = $page.url.searchParams.get('q') || '';
 	let searchTermGroup = $page.url.searchParams.get('group') || 'all';
@@ -113,7 +111,6 @@
 		<h2 class="exercise__filters-title">Filters</h2>
 		<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
 		<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
-		<FilterEquipment on:change={(e) => (selectedEquipment = e.detail)} />
 		<FilterFavorites bind:checked={showFavorites} on:change={handleFavoritesChange} />
 	</aside>
 
@@ -170,6 +167,10 @@
 		border-radius: 1.2rem;
 		box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
 		border: 1px solid #dddddd;
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+		overflow: hidden;
 	}
 
 	.exercise__filters-title {
@@ -230,6 +231,10 @@
 		.exercise__content {
 			width: 100%;
 		}
+
+		.exercise__filters {
+			order: -1; 
+		}
 	}
 
 	@media (max-width: 600px) {
@@ -239,6 +244,9 @@
 
 		.exercise__filters {
 			padding: 1.5rem;
+			margin-bottom: 1rem;
+			overflow-x: hidden;
+			max-width: 100%;
 		}
 
 		.exercise__filters-title {
@@ -248,6 +256,21 @@
 		.load-more {
 			width: 60%;
 			font-size: 1.4rem;
+		}
+	}
+	@media (max-width: 480px) {
+		.exercise {
+			padding: 0.75rem;
+		}
+
+		.exercise__filters {
+			padding: 1rem;
+			border-radius: 0.8rem;
+		}
+
+		.exercise__filters-title {
+			font-size: 1.4rem;
+			margin-bottom: 1rem;
 		}
 	}
 </style>
