@@ -58,6 +58,8 @@
 	text-align: center;
 	position: relative;
 	overflow: hidden;
+	min-height: 100%;
+	flex: 1;
 }
 
 .hero::after {
@@ -72,8 +74,13 @@
 
 .hero__content {
 	max-width: 70rem;
+	width: 100%;
 	z-index: 1;
 	position: relative;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 .hero__content h1 {
@@ -103,6 +110,9 @@
 	gap: 3rem;
 	margin-top: 3rem;
 	z-index: 1;
+	position: relative;
+	justify-content: center;
+	flex-wrap: wrap;
 }
 
 .stat {
