@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 
 	onMount(async () => {
-		// Esto es para flujo de confirmación por email o magic link
+		// Esto es para flujo de confirmación por email
 		const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
 
 		if (error) {
