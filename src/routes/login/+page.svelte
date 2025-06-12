@@ -6,7 +6,7 @@
 	let error = '';
 
 	async function login() {
-		const res = await fetch('/api/sign-in', {
+		const res = await fetch('/api/auth/sign-in', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email, password })
