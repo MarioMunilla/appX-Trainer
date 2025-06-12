@@ -104,45 +104,47 @@
 	}
 </script>
 
-<section class="exercise">
-	<SearchBar initialQuery={searchTerm} />
+<section class="exercise-wrapper">
+	<div class="exercise">
+		<SearchBar initialQuery={searchTerm} />
 
-	<aside class="exercise__filters">
-		<h2 class="exercise__filters-title">Filters</h2>
-		<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
-		<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
-		<FilterFavorites bind:checked={showFavorites} on:change={handleFavoritesChange} />
-	</aside>
+		<aside class="exercise__filters">
+			<h2 class="exercise__filters-title">Filters</h2>
+			<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
+			<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
+			<FilterFavorites bind:checked={showFavorites} on:change={handleFavoritesChange} />
+		</aside>
 
-	<main class="exercise__content">
-		<div class="exercise__grid">
-			{#each data.exercises.results as exercise (exercise.id)}
-				<ExerciseCard
-					id={exercise.id}
-					name={exercise.name}
-					bodyParts={[exercise.bodyPart]}
-					gif_url={exercise.gif_url}
-					difficulty={exercise.difficulty}
-					isFavorite={exercise.isFavorite}
-					onFavoriteChange={(isFavorite) => handleFavoriteToggle(exercise.id, isFavorite)}
-				/>
-			{:else}
-				<p class="no-results">No se encontraron ejercicios para tu búsqueda.</p>
-			{/each}
-		</div>
-
-		{#if data.exercises.info.next}
-			<button onclick={fetchNextPage} class="load-more" disabled={loading}>
-				{#if loading}Cargando...
+		<main class="exercise__content">
+			<div class="exercise__grid">
+				{#each data.exercises.results as exercise (exercise.id)}
+					<ExerciseCard
+						id={exercise.id}
+						name={exercise.name}
+						bodyParts={[exercise.bodyPart]}
+						gif_url={exercise.gif_url}
+						difficulty={exercise.difficulty}
+						isFavorite={exercise.isFavorite}
+						onFavoriteChange={(isFavorite) => handleFavoriteToggle(exercise.id, isFavorite)}
+					/>
 				{:else}
-					Cargar más
-				{/if}
-			</button>
-		{/if}
-	</main>
-</section>
+					<p class="no-results">No se encontraron ejercicios para tu búsqueda.</p>
+				{/each}
+			</div>
 
+			{#if data.exercises.info.next}
+				<button onclick={fetchNextPage} class="load-more" disabled={loading}>
+					{#if loading}Cargando...
+					{:else}
+						Cargar más
+					{/if}
+				</button>
+			{/if}
+		</main>
+	</div>
+</section>
 <style>
+
 	.exercise {
 		max-width: 128rem;
 		margin: 0 auto;
@@ -153,7 +155,9 @@
 			'filters content';
 		grid-template-columns: 1fr 3fr;
 		gap: 2rem;
+		box-sizing: border-box;
 		background-color: #cbd5e1;
+
 	}
 
 	:global(.exercise > :first-child) {
@@ -258,6 +262,7 @@
 			font-size: 1.4rem;
 		}
 	}
+
 	@media (max-width: 480px) {
 		.exercise {
 			padding: 0.75rem;
