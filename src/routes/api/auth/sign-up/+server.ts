@@ -13,7 +13,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		email,
 		password,
 		options: {
-			emailRedirectTo: 'http://localhost:5173/auth/callback'
+			emailRedirectTo: 'http://localhost:5173/confirm'
 		}
 	});
 
