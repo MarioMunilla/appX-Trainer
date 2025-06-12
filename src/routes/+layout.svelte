@@ -9,10 +9,26 @@
     let { data, children }: { data: LayoutData, children: Snippet } = $props();
 </script>
 
-<Header />
+<div class="app-layout">
+    <Header />
+    
+    <main class="main-content">
+        {@render children()}
+    </main>
+    
+    <Footer />
+</div>
 
-<main>
-    {@render children()}
-</main>
+<style>
+    .app-layout {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
 
-<Footer />
+    .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+</style>
