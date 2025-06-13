@@ -1,34 +1,58 @@
 <script lang="ts">
 	import { supabase } from "$lib/supabaseClient";
+	import { goto } from '$app/navigation';
 
 	let email = '';
 	let password = '';
 	let error = '';
+	let isLoading = false;
 
 	async function login() {
-		const res = await fetch('/api/auth/sign-in', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ email, password })
-		});
+		error = '';
+		isLoading = true;
+		
+		try {
+			const res = await fetch('/api/auth/sign-in', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email, password })
+			});
 
-		const result = await res.json();
-		if (!res.ok) {
-			error = result.error;
-		} else {
-			window.location.href = '/';
+			const result = await res.json();
+			if (!res.ok) {
+				error = result.error;
+			} else {
+				await goto('/');
+			}
+		} catch (err) {
+			error = 'Error de conexión. Intenta nuevamente.';
+		} finally {
+			isLoading = false;
 		}
 	}
 
 	async function loginWithGoogle() {
-		const { data, error } = await supabase.auth.signInWithOAuth({
-			provider: 'google'
-		});
+		error = '';
+		isLoading = true;
+		try {
+			const { error: authError } = await supabase.auth.signInWithOAuth({
+				provider: 'google'
+			});
+			if (authError) throw authError;
+		} catch (err) {
+			error = 'Error al iniciar sesión con Google';
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	function goToRegister() {
+		goto('/register');
 	}
 </script>
 
 <div class="login-container">
-	<h1>Iniciar sesión</h1>
+	<h1>Login</h1>
 	<form on:submit|preventDefault={login} class="login-form">
 		<input
 			bind:value={email}
@@ -36,16 +60,36 @@
 			type="email"
 			required
 			autocomplete="username"
+			disabled={isLoading}
 		/>
 		<input
 			bind:value={password}
 			type="password"
-			placeholder="Contraseña"
+			placeholder="Password"
 			required
 			autocomplete="current-password"
+			disabled={isLoading}
 		/>
-		<button type="submit" class="primary">Entrar</button>
-		<button type="button" class="google" on:click={loginWithGoogle}>Entrar con Google</button>
+		<button type="submit" class="primary" disabled={isLoading}>
+			{isLoading ? 'Loading...' : 'Enter'}
+		</button>
+		<button 
+			type="button" 
+			class="google" 
+			on:click={loginWithGoogle}
+			disabled={isLoading}
+		>
+			{#if isLoading}
+				Loading...
+			{:else}
+				Enter with Google
+			{/if}
+		</button>
+		
+		<div class="register-link">
+			Don’t have an account? <a href="/register" on:click|preventDefault={goToRegister}>Register here</a>
+		</div>
+
 		{#if error}
 			<p class="error">{error}</p>
 		{/if}
@@ -125,6 +169,23 @@
 	margin: 0;
 	text-align: center;
 	font-size: 0.95rem;
+}
+
+.register-link {
+	text-align: center;
+	margin-top: 1rem;
+	font-size: 0.9rem;
+	color: #666;
+}
+
+.register-link a {
+	color: #6366f1;
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.register-link a:hover {
+	text-decoration: underline;
 }
 
 h1 {
