@@ -1,18 +1,23 @@
-import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ fetch, url }) => {
-	const [exercisesResponse, bodyPartsResponse] = await Promise.all([
-		fetch(`/api/exercises?${url.searchParams.toString()}`),
-		fetch(`/api/body_parts`)
-	]);
+export const load: PageServerLoad = async ({ fetch, url, request }) => {
+	const cookieHeader = request.headers.get('cookie') ?? '';
+
+	const exercisesResponse = await fetch(`/api/exercises?${url.searchParams.toString()}`, {
+		headers: {
+			cookie: cookieHeader // enviamos las cookies originales del cliente
+		}
+	});
+
+	const bodyPartsResponse = await fetch(`/api/body_parts`);
 
 	if (!exercisesResponse.ok || !bodyPartsResponse.ok) {
-		throw error(500, 'Fallo al cargar datos de exercise');
+		throw new Error('Fallo al cargar datos de exercise');
 	}
 
 	const exercises = await exercisesResponse.json();
 	const bodyParts = await bodyPartsResponse.json();
+
 	return {
 		exercises,
 		bodyParts
