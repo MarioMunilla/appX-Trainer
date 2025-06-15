@@ -9,7 +9,8 @@ type RegisterRequest = {
 export const POST: RequestHandler = async ({ request }) => {
 	const { email, password } = (await request.json()) as RegisterRequest;
 
-	const redirectUrl = process.env.VITE_APP_REDIRECT_URL || 'http://localhost:5173/confirm';
+	// Usar siempre la variable de entorno para producción
+	const redirectUrl = import.meta.env.VITE_APP_REDIRECT_URL;
 
 	const { data, error } = await supabase.auth.signUp({
 		email,
