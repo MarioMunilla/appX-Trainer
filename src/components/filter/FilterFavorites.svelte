@@ -1,12 +1,18 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
+    interface FavFilterProps { 
+        checked: boolean, 
+        onchange?: (isChecked: boolean) => void 
+    }
+    
+    let { 
+        checked = $bindable(),
+        onchange
+    }: FavFilterProps = $props();
 
-    const dispatch = createEventDispatcher();
-    export let checked = false;
-
-    function handleToggle(event: Event) {
-        checked = (event.target as HTMLInputElement).checked;
-        dispatch('change', checked);
+    function handleOnChange(event: Event) {
+        const cb = event.target as HTMLInputElement
+        checked = cb.checked
+        if (onchange) { onchange(checked) }
     }
 </script>
 
@@ -15,8 +21,7 @@
         <input 
             type="checkbox" 
             class="filter__checkbox"
-            bind:checked
-            on:change={handleToggle}
+            onchange={handleOnChange}
         />
         <span class="filter__label-text">Favorites</span>
     </label>
