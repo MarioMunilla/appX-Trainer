@@ -1,17 +1,31 @@
+// src/routes/routine/+page.server.ts
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { supabase } from '$lib/supabaseClient';
 
-export const load: PageServerLoad = async ({ fetch }) => {
-	const response = await fetch(`/api/routines?user_id=9844e6c1-0812-4f01-aa1b-1258abc17d65`);
+export const load: PageServerLoad = async ({ fetch, cookies }) => {
+	const jwt = cookies.get('session');
+	if (!jwt) throw error(401, 'No autenticado');
+
+	const {
+		data: { user },
+		error: authError
+	} = await supabase.auth.getUser(jwt);
+
+	if (authError || !user) throw error(401, 'No autenticado');
+
+	const response = await fetch('/api/routines');
 
 	if (!response.ok) {
-		throw error(500, 'Fallo al cargar datos de exercise');
+		const { error: message } = await response.json();
+		throw error(response.status, message || 'Error al cargar rutina');
 	}
 
 	const { routine_id, exercises } = await response.json();
 
 	return {
 		routine_id,
-		exercises
+		exercises,
+		user_id: user.id
 	};
 };
