@@ -1,70 +1,80 @@
+<script lang="ts" context="module">
+	export interface PageData {
+		routine_id: string;
+		exercises: any[];
+		user_id: string;
+	}
+</script>
+
 <script lang="ts">
-	import { page } from '$app/stores';
-	import type { PageData } from './$types';
+	import { invalidateAll } from '$app/navigation';
+
+	import { supabase } from '$lib/supabaseClient';
 
 	export let data: PageData;
 
 	let routine_id = data.routine_id;
 	let title = 'Mi rutina pro!';
 	let description = 'Descripción de la rutina';
+	const user_id = data.user_id;
+	const exercises = data.exercises;
 
-	const user_id = '9844e6c1-0812-4f01-aa1b-1258abc17d65';
-
-	// Evitar error si data.exercises no está definido
-	let exercises = (data.exercises ?? []).map((item: any, index: number) => ({
-		...item,
-		weight: 10 * (index + 1)
-	}));
-
+	// Funciones para los botones (las puedes añadir aquí)
 	function incrementWeight(index: number) {
-		exercises[index].weight += 5;
+		exercises[index].weight = (exercises[index].weight ?? 0) + 1;
 	}
 
 	function decrementWeight(index: number) {
-		exercises[index].weight = Math.max(0, exercises[index].weight - 5);
+		exercises[index].weight = Math.max((exercises[index].weight ?? 0) - 1, 0);
 	}
 
 	function moveUp(index: number) {
-		if (index > 0) {
-			[exercises[index - 1], exercises[index]] = [exercises[index], exercises[index - 1]];
-		}
+		if (index === 0) return;
+		[exercises[index - 1], exercises[index]] = [exercises[index], exercises[index - 1]];
 	}
 
 	function moveDown(index: number) {
-		if (index < exercises.length - 1) {
-			[exercises[index], exercises[index + 1]] = [exercises[index + 1], exercises[index]];
-		}
+		if (index === exercises.length - 1) return;
+		[exercises[index + 1], exercises[index]] = [exercises[index], exercises[index + 1]];
+	}
+
+	async function getJWT() {
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
+		return session?.access_token;
 	}
 
 	async function saveRoutine() {
-		if (!user_id) {
-			console.warn('user_id no encontrado');
-			alert('No se puede guardar la rutina porque falta user_id');
-			return;
-		}
+		try {
+			const jwt = await getJWT();
+			if (!jwt) throw new Error('No autenticado');
 
-		const res = await fetch(`/api/routines/${routine_id}`, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				user_id,
-				name: title,
-				description
-			})
-		});
+			const res = await fetch(`/api/routines/${routine_id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${jwt}`
+				},
+				body: JSON.stringify({ name: title, description })
+			});
 
-		if (!res.ok) {
-			alert('Error al guardar la rutina');
-		} else {
-			alert('Rutina guardada exitosamente');
+			if (!res.ok) throw new Error(await res.text());
+			alert('Rutina guardada');
+		} catch (err) {
+			console.error('Error:', err);
+			alert('Error al guardar');
 		}
 	}
+	 invalidateAll();
 </script>
+
+<!-- resto del código sin cambios -->
 
 <div class="routine-container">
 	<div class="header">
 		<input type="text" bind:value={title} />
-		<button onclick={saveRoutine}>💾 Guardar</button>
+		<button on:click={saveRoutine}>💾 Guardar</button>
 	</div>
 
 	<input type="text" bind:value={description} placeholder="Descripción" />
@@ -76,11 +86,11 @@
 					<div class="exercise-header">
 						<span>{item.exercises.name}</span>
 						<div class="exercise-controls">
-							<button onclick={() => decrementWeight(index)}>-</button>
+							<button on:click={() => decrementWeight(index)}>-</button>
 							<span>{item.weight}</span>
-							<button onclick={() => incrementWeight(index)}>+</button>
-							<button onclick={() => moveUp(index)}>▲</button>
-							<button onclick={() => moveDown(index)}>▼</button>
+							<button on:click={() => incrementWeight(index)}>+</button>
+							<button on:click={() => moveUp(index)}>▲</button>
+							<button on:click={() => moveDown(index)}>▼</button>
 						</div>
 					</div>
 
@@ -99,7 +109,7 @@
 	{/if}
 
 	<div class="footer">
-		<button onclick={saveRoutine}>💾 Guardar</button>
+		<button on:click={saveRoutine}>💾 Guardar</button>
 	</div>
 </div>
 
@@ -111,46 +121,16 @@
 		border: 1px solid #ccc;
 		border-radius: 1rem;
 	}
-	.header, .footer {
+	.header,
+	.footer {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 1rem;
 	}
-	input[type="text"] {
+	input[type='text'] {
 		width: 100%;
 		padding: 0.5rem;
-		margin-bottom: 1rem;
-		border-radius: 0.5rem;
-		border: 1px solid #ccc;
-	}
-	.exercise-item {
-		border-top: 1px solid #ccc;
-		padding: 1rem 0;
-		display: flex;
-		flex-direction: column;
-	}
-	.exercise-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-	.exercise-controls {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-	button {
-		border: 1px solid #333;
-		background: white;
-		border-radius: 0.3rem;
-		cursor: pointer;
-		padding: 0.25rem 0.5rem;
-	}
-	video, img {
-		margin-top: 0.5rem;
-		width: 100%;
-		max-height: 180px;
-		object-fit: cover;
+		margin-bottom: 1;
 	}
 </style>
