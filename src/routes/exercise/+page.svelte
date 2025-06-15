@@ -14,7 +14,6 @@
 	let showFavorites = $page.url.searchParams.get('favorites') === 'true';
 	let searchTerm = $page.url.searchParams.get('q') || '';
 	let searchTermGroup = $page.url.searchParams.get('group') || 'all';
-	let userId: string = '9844e6c1-0812-4f01-aa1b-1258abc17d65';
 
 	let loading = false;
 
@@ -33,16 +32,16 @@
 		goto(`/exercise?${params.toString()}`);
 	}
 
-	async function handleFavoritesChange(e: CustomEvent<boolean>) {
-		const newValue = e.detail;
-		showFavorites = newValue;
+	async function handleFavoritesChange(isChecked: boolean) {
+		showFavorites = isChecked;
 		const params = new URLSearchParams($page.url.searchParams);
-		if (newValue) {
+		console.log(isChecked)
+		if (isChecked) {
 			params.set('favorites', 'true');
-			params.set('user_id', userId);
+			// NO pasar user_id en query params
 		} else {
 			params.delete('favorites');
-			params.delete('user_id');
+			// NO borrar user_id porque no se usa
 		}
 		goto(`/exercise?${params.toString()}`);
 	}
@@ -51,8 +50,9 @@
 		const res = await fetch('/api/exercises', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
+			credentials:'include',
 			body: JSON.stringify({
-				user_id: userId,
+				// NO enviar user_id aquí
 				exercise_id: id,
 				favorite: isFavorite
 			})
@@ -83,7 +83,9 @@
 		const params = new URLSearchParams($page.url.searchParams);
 		params.set('p', nextPage.toString());
 
-		const response = await fetch(`/api/exercises?${params.toString()}`);
+		const response = await fetch(`/api/exercises?${params.toString()}`,{
+			credentials:'include'
+		});
 		if (!response.ok) {
 			loading = false;
 			console.error('Error al cargar más ejercicios');
@@ -112,7 +114,7 @@
 			<h2 class="exercise__filters-title">Filters</h2>
 			<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
 			<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
-			<FilterFavorites bind:checked={showFavorites} on:change={handleFavoritesChange} />
+			<FilterFavorites bind:checked={showFavorites} onchange={handleFavoritesChange} />
 		</aside>
 
 		<main class="exercise__content">
@@ -143,6 +145,7 @@
 		</main>
 	</div>
 </section>
+
 <style>
 
 	.exercise {
