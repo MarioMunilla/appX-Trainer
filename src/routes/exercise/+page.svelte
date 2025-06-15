@@ -9,6 +9,15 @@
 	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
 
 	let { data }: { data: PageData } = $props();
+	
+	let exercises = $state(data.exercises.results)
+	let pagination = $state(data.exercises.info)
+	let bodyParts = data.bodyParts
+
+	$effect(()=>{
+		exercises = data.exercises.results
+		pagination = data.exercises.info
+	})
 
 	let selectedDifficulty = $page.url.searchParams.get('difficulty') || 'all';
 	let showFavorites = $page.url.searchParams.get('favorites') === 'true';
@@ -35,7 +44,6 @@
 	async function handleFavoritesChange(isChecked: boolean) {
 		showFavorites = isChecked;
 		const params = new URLSearchParams($page.url.searchParams);
-		console.log(isChecked)
 		if (isChecked) {
 			params.set('favorites', 'true');
 			// NO pasar user_id en query params
@@ -47,6 +55,7 @@
 	}
 
 	async function handleFavoriteToggle(id: string, isFavorite: boolean) {
+		
 		const res = await fetch('/api/exercises', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -58,17 +67,11 @@
 			})
 		});
 		if (res.ok) {
-			const exercise = data.exercises.results.find((e: { id: string }) => e.id === id);
+			const exercise = exercises.find((e: { id: string }) => e.id === id);
 			if (exercise) {
 				exercise.isFavorite = isFavorite;
 			}
-			data = {
-				...data,
-				exercises: {
-					info: data.exercises.info,
-					results: [...data.exercises.results]
-				}
-			};
+			exercises = exercises
 		} else {
 			console.error('Error al actualizar favorito');
 			console.error(res);
@@ -76,10 +79,10 @@
 	}
 
 	async function fetchNextPage() {
-		if (loading || !data.exercises.info.next) return;
+		if (loading || !pagination.next) return;
 		loading = true;
 
-		const nextPage = data.exercises.info.next;
+		const nextPage = pagination.next;
 		const params = new URLSearchParams($page.url.searchParams);
 		params.set('p', nextPage.toString());
 
@@ -93,14 +96,8 @@
 		}
 
 		const jsonResponse = await response.json();
-
-		data = {
-			...data,
-			exercises: {
-				info: jsonResponse.info,
-				results: [...data.exercises.results, ...jsonResponse.results]
-			}
-		};
+		exercises = [...exercises, ...jsonResponse.results]
+		pagination = jsonResponse.info
 
 		loading = false;
 	}
@@ -112,14 +109,14 @@
 
 		<aside class="exercise__filters">
 			<h2 class="exercise__filters-title">Filters</h2>
-			<FilterGroup options={data.bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
+			<FilterGroup options={bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
 			<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
 			<FilterFavorites bind:checked={showFavorites} onchange={handleFavoritesChange} />
 		</aside>
 
 		<main class="exercise__content">
 			<div class="exercise__grid">
-				{#each data.exercises.results as exercise (exercise.id)}
+				{#each exercises as exercise (exercise.id)}
 					<ExerciseCard
 						id={exercise.id}
 						name={exercise.name}
@@ -134,7 +131,7 @@
 				{/each}
 			</div>
 
-			{#if data.exercises.info.next}
+			{#if pagination.next}
 				<button onclick={fetchNextPage} class="load-more" disabled={loading}>
 					{#if loading}Cargando...
 					{:else}
