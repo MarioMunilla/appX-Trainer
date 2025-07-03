@@ -21,11 +21,13 @@ export const load: PageServerLoad = async ({ fetch, cookies }) => {
 		throw error(response.status, message || 'Error al cargar rutina');
 	}
 
-	const { routine_id, exercises } = await response.json();
+	const { id: routine_id, name, description, exercises } = await response.json();
 
 	return {
 		routine_id,
 		exercises,
+		name,
+		description,
 		user_id: user.id
 	};
 };

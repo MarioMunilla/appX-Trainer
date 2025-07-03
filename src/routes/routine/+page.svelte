@@ -3,81 +3,98 @@
 		routine_id: string;
 		exercises: any[];
 		user_id: string;
+		name: string | null;
+		description: string | null;
 	}
 </script>
 
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-
 	import { supabase } from '$lib/supabaseClient';
 
 	export let data: PageData;
 
 	let routine_id = data.routine_id;
-	let title = 'Mi rutina pro!';
-	let description = 'Descripción de la rutina';
-	const user_id = data.user_id;
-	const exercises = data.exercises;
+	let title = data.name || 'Mi rutina';
+	let description = data.description || 'Descripción de la rutina';
+	let exercises = data.exercises.map((ex) => ({
+		...ex,
+		weight: 0
+	}));
+	let isSaving = false;
+	let saveMessage = '';
+	let saveError = false;
+	let originalTitle = title; // Para comparar cambios
 
-	// Funciones para los botones (las puedes añadir aquí)
+	// Funciones para los botones
 	function incrementWeight(index: number) {
-		exercises[index].weight = (exercises[index].weight ?? 0) + 1;
+		exercises[index].weight = (exercises[index].weight || 0) + 1;
+		exercises = [...exercises];
 	}
 
 	function decrementWeight(index: number) {
-		exercises[index].weight = Math.max((exercises[index].weight ?? 0) - 1, 0);
+		exercises[index].weight = Math.max((exercises[index].weight || 0) - 1, 0);
+		exercises = [...exercises];
 	}
 
 	function moveUp(index: number) {
 		if (index === 0) return;
 		[exercises[index - 1], exercises[index]] = [exercises[index], exercises[index - 1]];
+		exercises = [...exercises];
 	}
 
 	function moveDown(index: number) {
 		if (index === exercises.length - 1) return;
 		[exercises[index + 1], exercises[index]] = [exercises[index], exercises[index + 1]];
+		exercises = [...exercises];
 	}
 
-	async function getJWT() {
-		const {
-			data: { session }
-		} = await supabase.auth.getSession();
-		return session?.access_token;
-	}
 
 	async function saveRoutine() {
-		try {
-			const jwt = await getJWT();
-			if (!jwt) throw new Error('No autenticado');
+		const res = await fetch(`/api/routines/${routine_id}`, {
+			method: 'PATCH',
+			headers: {
+			'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ name: title, description })
+		});
 
-			const res = await fetch(`/api/routines/${routine_id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${jwt}`
-				},
-				body: JSON.stringify({ name: title, description })
-			});
+		const data = await res.json();
 
-			if (!res.ok) throw new Error(await res.text());
-			alert('Rutina guardada');
-		} catch (err) {
-			console.error('Error:', err);
-			alert('Error al guardar');
-		}
+		if (!res.ok) throw new Error(data.error || 'Error al guardar');
+
+		saveMessage = 'Rutina guardada correctamente';
+		originalTitle = title; // Actualizar el título original
 	}
-	 invalidateAll();
+	// Manejar el cambio de título
+	let titleTimeout: NodeJS.Timeout;
+	function handleTitleChange() {
+		clearTimeout(titleTimeout);
+		titleTimeout = setTimeout(saveRoutine, 1000); // Guardar después de 1 segundo sin cambios
+	}
 </script>
-
-<!-- resto del código sin cambios -->
 
 <div class="routine-container">
 	<div class="header">
-		<input type="text" bind:value={title} />
-		<button on:click={saveRoutine}>💾 Guardar</button>
+		<input
+			type="text"
+			bind:value={title}
+			on:input={handleTitleChange}
+			placeholder="Nombre de la rutina"
+		/>
 	</div>
+	{#if saveMessage}
+		<div class="alert {saveError ? 'error' : 'success'}">
+			{saveMessage}
+		</div>
+	{/if}
 
-	<input type="text" bind:value={description} placeholder="Descripción" />
+	<input
+		type="text"
+		bind:value={description}
+		on:input={handleTitleChange}
+		placeholder="Descripción"
+	/>
 
 	{#if exercises.length > 0}
 		<ol>
@@ -87,7 +104,7 @@
 						<span>{item.exercises.name}</span>
 						<div class="exercise-controls">
 							<button on:click={() => decrementWeight(index)}>-</button>
-							<span>{item.weight}</span>
+							<span>{item.weight || 0}</span>
 							<button on:click={() => incrementWeight(index)}>+</button>
 							<button on:click={() => moveUp(index)}>▲</button>
 							<button on:click={() => moveDown(index)}>▼</button>
@@ -107,10 +124,6 @@
 	{:else}
 		<p>No tienes ejercicios en tu rutina aún.</p>
 	{/if}
-
-	<div class="footer">
-		<button on:click={saveRoutine}>💾 Guardar</button>
-	</div>
 </div>
 
 <style>
@@ -132,5 +145,21 @@
 		width: 100%;
 		padding: 0.5rem;
 		margin-bottom: 1;
+	}
+	.alert {
+		padding: 0.5rem;
+		margin: 0.5rem 0;
+		border-radius: 0.25rem;
+		text-align: center;
+	}
+	.success {
+		background-color: #d4edda;
+		color: #155724;
+		border: 1px solid #c3e6cb;
+	}
+	.error {
+		background-color: #f8d7da;
+		color: #721c24;
+		border: 1px solid #f5c6cb;
 	}
 </style>

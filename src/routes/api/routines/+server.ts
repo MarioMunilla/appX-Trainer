@@ -53,7 +53,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		.eq('user_id', user.id)
 		.eq('name', 'Mi rutina')
 		.single();
-	console.log(routine);
+	/* console.log(routine); */
 	let routine_id: string;
 
 	if (routineError?.code === 'PGRST116') {

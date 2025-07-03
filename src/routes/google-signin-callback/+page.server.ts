@@ -3,10 +3,7 @@ import { type Actions } from '@sveltejs/kit';
 
 export const actions = {
 	default: async ({ request, cookies }) => {
-		console.log('ENTRO??');
 		const { jwt: accessToken } = await request.json();
-
-		// accessToken is already a string JWT token, no JSON.parse needed
 		const { data } = await supabase.auth.getUser(accessToken);
 		if (!data.user) {
 			// TODO: handle error properly

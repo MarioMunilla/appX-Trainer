@@ -14,8 +14,6 @@ onMount(async () => {
 		return goto('/');
 	}
 
-	console.log('SESSION TOKEN:', session.access_token);
-
 	await fetch('', {
 		method: 'POST',
 		body: JSON.stringify({ jwt: session.access_token }),

@@ -13,9 +13,9 @@
 
 	let { id, name, gif_url, difficulty, isFavorite, onFavoriteChange }: ExerciseCardProps = $props();
 
-	$effect(() => {
+	/* $effect(() => {
 		console.log('isFavorite prop: ' + isFavorite)
-	})
+	}) */
 	
 	const isGif = gif_url?.endsWith('.gif') ?? false;
 

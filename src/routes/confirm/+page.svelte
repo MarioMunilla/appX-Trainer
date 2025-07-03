@@ -4,7 +4,6 @@
 	import { goto } from '$app/navigation';
 
 	function parseHash(hash: string): Record<string, string> {
-		console.log('Hash raw:', hash);
 		if (!hash || hash.length < 2) return {};
 		const parsed = Object.fromEntries(
 			hash
@@ -12,13 +11,11 @@
 				.split("&")
 				.map((param) => param.split("="))
 		);
-		console.log('Hash parsed:', parsed);
 		return parsed;
 	}
 
 	onMount(async () => {
 		const hash = window.location.hash;
-		console.log('Window location hash:', hash);
 
 		const params = parseHash(hash);
 
@@ -37,7 +34,6 @@
 			console.error("Error al confirmar la cuenta:", error.message);
 			alert("Error al confirmar tu cuenta. Intenta nuevamente.");
 		} else {
-			console.log('Sesión establecida correctamente, redirigiendo...');
 			goto("/");
 		}
 	});

@@ -5,9 +5,9 @@
 
 	let { isFavorite }: HeartIconProps = $props();
 
-	$effect(()=> {
+	/* $effect(()=> {
 		console.log(isFavorite)
-	})
+	}) */
 </script>
 
 <svg class:heart__filled={isFavorite}

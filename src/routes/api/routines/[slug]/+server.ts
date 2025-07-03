@@ -4,7 +4,7 @@ import { supabase } from '$lib/supabaseClient';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { slug: routine_id } = params;
-
+	console.log(routine_id);
 	const { data: routine, error: routineError } = await supabase
 		.from('routines')
 		.select('*')
@@ -106,16 +106,51 @@ export const POST: RequestHandler = async ({ params, cookies }) => {
 	return json({ success: true, routine_id });
 };
 
-export const PATCH: RequestHandler = async ({ request, params }) => {
+export const PATCH: RequestHandler = async ({ request, params, cookies }) => {
 	const { slug: routine_id } = params;
+	const token = cookies.get('session');
+
+	if (!token) {
+		return json({ error: 'No autenticado' }, { status: 401 });
+	}
+
+	const {
+		data: { user },
+		error: authError
+	} = await supabase.auth.getUser(token);
+
+	if (authError || !user) {
+		return json({ error: 'No autenticado' }, { status: 401 });
+	}
+
+	// Verificar que la rutina pertenece al usuario
+	const { data: routine, error: routineError } = await supabase
+		.from('routines')
+		.select('user_id')
+		.eq('id', routine_id)
+		.single();
+
+	if (routineError) {
+		return json({ error: 'Error al verificar la rutina' }, { status: 500 });
+	}
+
+	if (!routine || routine.user_id !== user.id) {
+		return json({ error: 'No autorizado' }, { status: 403 });
+	}
+
 	const { name, description } = await request.json();
 
-	const { error } = await supabase
+	const { data, error } = await supabase
 		.from('routines')
 		.update({ name, description })
-		.eq('id', routine_id);
+		.eq('id', routine_id)
+		.select()
+		.single();
 
-	if (error) return json({ error: error.message }, { status: 500 });
+	if (error) {
+		console.error('Error updating routine:', error);
+		return json({ error: error.message }, { status: 500 });
+	}
 
-	return json({ success: true });
+	return json({ success: true, data });
 };

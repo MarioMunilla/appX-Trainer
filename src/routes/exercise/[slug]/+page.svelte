@@ -28,10 +28,6 @@
 		goto('/exercise');
 	}
 
-	function addToFavorites() {
-		// Lógica de favoritos
-	}
-
 	async function addToRoutine() {
 		const {
 			data: { user },
@@ -42,7 +38,7 @@
 			alert('Debes iniciar sesión para añadir ejercicios a tu rutina');
 			return;
 		}
-
+		console.log(exercise.id);
 		const res = await fetch(`/api/routines/${exercise.id}`, {
 			method: 'POST',
 			headers: {
@@ -52,7 +48,7 @@
 
 		if (res.ok) {
 			alert('Ejercicio añadido a tu rutina');
-			goto('/routine'); // ❗️ Redirige para que cargue la rutina actualizada
+			goto('/routine');
 		} else {
 			const err = await res.json();
 			alert('Error al añadir: ' + err.error);
@@ -84,11 +80,9 @@
 				</header>
 
 				<p class="exercise-detail__text"><strong>Descripción:</strong> {exercise.description}</p>
-				<p class="exercise-detail__text"><strong>Grupo muscular:</strong> {exercise.bodyPart}</p>
 				<Stars rating={userScore} rate={rate} />
 
 				<footer class="exercise-detail__footer">
-					<button class="exercise-detail__action" on:click={addToFavorites}>⭐ Añadir a favoritos</button>
 					<button class="exercise-detail__action" on:click={addToRoutine}>➕ Añadir a rutina</button>
 				</footer>
 			</section>

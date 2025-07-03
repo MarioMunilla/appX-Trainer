@@ -102,7 +102,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		// Obtener el JWT de la cookie
 		const accessToken = cookies.get('session');
-		console.log('Access token:', accessToken);
+		/* console.log('Access token:', accessToken); */
 		let userId: string | null = null;
 
 		if (accessToken) {
