@@ -3,36 +3,60 @@ import { supabase } from '$lib/supabaseClient';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies }) => {
-	const token = cookies.get('session');
-	if (!token) return json({ error: 'No autenticado' }, { status: 401 });
+	try {
+		const token = cookies.get('session');
+		if (!token) return json({ error: 'No autenticado' }, { status: 401 });
 
-	const {
-		data: { user },
-		error
-	} = await supabase.auth.getUser(token);
-	if (error || !user) return json({ error: 'No autenticado' }, { status: 401 });
+		const {
+			data: { user },
+			error
+		} = await supabase.auth.getUser(token);
+		if (error || !user) return json({ error: 'No autenticado' }, { status: 401 });
 
-	const { data: routine, error: routineError } = await supabase
-		.from('routines')
-		.select('id')
-		.eq('user_id', user.id)
-		.eq('name', 'Mi rutina')
-		.single();
+		const { data: routine, error: routineError } = await supabase
+			.from('routines')
+			.select('id,name,description')
+			.eq('user_id', user.id)
+			.order('created_at', { ascending: false })
+			.limit(1)
+			.single();
 
-	if (routineError?.code === 'PGRST116') {
-		return json({ routine_id: null, exercises: [] });
-	} else if (routineError) {
-		return json({ error: routineError.message }, { status: 500 });
+		if (routineError?.code === 'PGRST116' || !routine) {
+			// No existe rutina, devolver objeto vacío
+			return json({ routine_id: null, name: null, description: null, exercises: [] });
+		} else if (routineError) {
+			console.error('Error al buscar rutina:', routineError);
+			return json(
+				{
+					error:
+						typeof routineError === 'object' && 'message' in routineError
+							? routineError.message
+							: String(routineError)
+				},
+				{ status: 500 }
+			);
+		}
+
+		const { data: exercises, error: exError } = await supabase
+			.from('routines_exercises')
+			.select('exercise_id, exercises(*), repetitions, order')
+			.eq('routine_id', routine.id);
+
+		if (exError) {
+			console.error('Error al buscar ejercicios:', exError);
+			return json({ error: exError.message }, { status: 500 });
+		}
+
+		return json({
+			routine_id: routine.id,
+			name: routine.name,
+			description: routine.description,
+			exercises
+		});
+	} catch (err) {
+		console.error('Error inesperado en GET /api/routines:', err);
+		return json({ error: 'Error inesperado en el servidor.' }, { status: 500 });
 	}
-
-	const { data: exercises, error: exError } = await supabase
-		.from('routines_exercises')
-		.select('exercise_id, exercises(*), repetitions, order')
-		.eq('routine_id', routine.id);
-
-	if (exError) return json({ error: exError.message }, { status: 500 });
-
-	return json({ routine_id: routine.id, exercises });
 };
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
