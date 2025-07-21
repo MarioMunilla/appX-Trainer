@@ -7,17 +7,12 @@
 	import FilterGroup from '../../components/filter/FilterGroup.svelte';
 	import { goto } from '$app/navigation';
 	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
+	import { onMount } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
-	
-	let exercises = $state(data.exercises.results)
-	let pagination = $state(data.exercises.info)
-	let bodyParts = data.bodyParts
-
-	$effect(()=>{
-		exercises = data.exercises.results
-		pagination = data.exercises.info
-	})
+	let exercises = $state(data.exercises.results);
+	let pagination = $state(data.exercises.info);
+	let bodyParts = data.bodyParts;
 
 	let selectedDifficulty = $page.url.searchParams.get('difficulty') || 'all';
 	let showFavorites = $page.url.searchParams.get('favorites') === 'true';
@@ -25,6 +20,15 @@
 	let searchTermGroup = $page.url.searchParams.get('group') || 'all';
 
 	let loading = false;
+
+	onMount(() => {
+	const updated = data.exercises.results.map((newEx: {id: any}) => {
+		const existing = exercises.find((ex: {id:any}) => ex.id === newEx.id);
+		return existing ?? newEx;
+	});
+	exercises = updated;
+	pagination = data.exercises.info;
+});
 
 	function handleGroupChange(group: string) {
 		const params = new URLSearchParams($page.url.searchParams);
@@ -46,35 +50,28 @@
 		const params = new URLSearchParams($page.url.searchParams);
 		if (isChecked) {
 			params.set('favorites', 'true');
-			// NO pasar user_id en query params
 		} else {
 			params.delete('favorites');
-			// NO borrar user_id porque no se usa
 		}
 		goto(`/exercise?${params.toString()}`);
 	}
 
 	async function handleFavoriteToggle(id: string, isFavorite: boolean) {
-		
 		const res = await fetch('/api/exercises', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			credentials:'include',
-			body: JSON.stringify({
-				// NO enviar user_id aquí
-				exercise_id: id,
-				favorite: isFavorite
-			})
+			credentials: 'include',
+			body: JSON.stringify({ exercise_id: id, favorite: isFavorite })
 		});
 		if (res.ok) {
-			const exercise = exercises.find((e: { id: string }) => e.id === id);
+			const exercise = exercises.find((e:{id:any}) => e.id === id);
 			if (exercise) {
 				exercise.isFavorite = isFavorite;
 			}
-			exercises = exercises
+			exercises = [...exercises]; // trigger reactivity
 		} else {
 			console.error('Error al actualizar favorito');
-			console.error(res);
+			console.error(await res.json());
 		}
 	}
 
@@ -82,12 +79,11 @@
 		if (loading || !pagination.next) return;
 		loading = true;
 
-		const nextPage = pagination.next;
 		const params = new URLSearchParams($page.url.searchParams);
-		params.set('p', nextPage.toString());
+		params.set('p', pagination.next.toString());
 
-		const response = await fetch(`/api/exercises?${params.toString()}`,{
-			credentials:'include'
+		const response = await fetch(`/api/exercises?${params.toString()}`, {
+			credentials: 'include'
 		});
 		if (!response.ok) {
 			loading = false;
@@ -96,8 +92,8 @@
 		}
 
 		const jsonResponse = await response.json();
-		exercises = [...exercises, ...jsonResponse.results]
-		pagination = jsonResponse.info
+		exercises = [...exercises, ...jsonResponse.results];
+		pagination = jsonResponse.info;
 
 		loading = false;
 	}
@@ -133,16 +129,12 @@
 
 			{#if pagination.next}
 				<button onclick={fetchNextPage} class="load-more" disabled={loading}>
-					{#if loading}Cargando...
-					{:else}
-						Cargar más
-					{/if}
+					{#if loading}Cargando...{:else}Cargar más{/if}
 				</button>
 			{/if}
 		</main>
 	</div>
 </section>
-
 <style>
 
 	.exercise {
