@@ -9,14 +9,14 @@
 </script>
 
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate, invalidateAll } from '$app/navigation';
 	import { supabase } from '$lib/supabaseClient';
-
 	export let data: PageData;
 
+	let title: string = data.name || 'Mi rutina';
+	let description: string = data.description || 'Descripción de la rutina';
+
 	let routine_id = data.routine_id;
-	let title = data.name || 'Mi rutina';
-	let description = data.description || 'Descripción de la rutina';
 	let exercises = data.exercises.map((ex) => ({
 		...ex,
 		weight: 0
@@ -25,6 +25,36 @@
 	let saveMessage = '';
 	let saveError = false;
 	let originalTitle = title; // Para comparar cambios
+	let editingTitle = false;
+	let editingDescription = false;
+	let titleInput: HTMLInputElement | null = null;
+	let descriptionInput: HTMLInputElement | null = null;
+	let originalDescription = description;
+
+	function startEditingTitle() {
+		editingTitle = true;
+		setTimeout(() => {
+			titleInput && titleInput.focus();
+		}, 0);
+	}
+	function startEditingDescription() {
+		editingDescription = true;
+		setTimeout(() => {
+			descriptionInput && descriptionInput.focus();
+		}, 0);
+	}
+	function stopEditingTitle(save = false) {
+		if (save && title !== originalTitle) {
+			saveRoutine();
+		}
+		editingTitle = false;
+	}
+	function stopEditingDescription(save = false) {
+		if (save && description !== originalDescription) {
+			saveRoutine();
+		}
+		editingDescription = false;
+	}
 
 	// Funciones para los botones
 	function incrementWeight(index: number) {
@@ -51,6 +81,7 @@
 
 
 	async function saveRoutine() {
+		console.log('Guardando rutina:', { title, description, exercises });
 		const res = await fetch(`/api/routines/${routine_id}`, {
 			method: 'PATCH',
 			headers: {
@@ -60,41 +91,63 @@
 		});
 
 		const data = await res.json();
+		console.log('PATCH response:', res, data);
 
 		if (!res.ok) throw new Error(data.error || 'Error al guardar');
 
 		saveMessage = 'Rutina guardada correctamente';
-		originalTitle = title; // Actualizar el título original
+		originalTitle = title;
+		originalDescription = description;
+		console.log('Nombre de la rutina:', title);
+		await invalidate('/routine');
 	}
-	// Manejar el cambio de título
-	let titleTimeout: NodeJS.Timeout;
-	function handleTitleChange() {
-		clearTimeout(titleTimeout);
-		titleTimeout = setTimeout(saveRoutine, 1000); // Guardar después de 1 segundo sin cambios
-	}
+	
 </script>
 
 <div class="routine-container">
 	<div class="header">
-		<input
-			type="text"
-			bind:value={title}
-			on:input={handleTitleChange}
-			placeholder="Nombre de la rutina"
-		/>
+		{#if editingTitle}
+			<input
+				type="text"
+				bind:value={title}
+				bind:this={titleInput}
+				placeholder="Nombre de la rutina"
+				style="margin-right:0.5rem;"
+			/>
+			<button aria-label="Guardar nombre" on:click={() => stopEditingTitle(true)} style="background:none;border:none;cursor:pointer;padding:0 0.5rem;">
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19c-2.5-1.5-6-2-9-2V6c3 0 6.5.5 9 2 2.5-1.5 6-2 9-2v11c-3 0-6.5.5-9 2z"/></svg>
+			</button>
+		{:else}
+			<span>{title}</span>
+			<button aria-label="Editar nombre" on:click={startEditingTitle} style="background:none;border:none;cursor:pointer;padding:0 0.5rem;">
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0L9 13zm0 0L4 19l5-1 1-5z"/></svg>
+			</button>
+		{/if}
+	</div>
+	<div class="description-edit">
+		{#if editingDescription}
+			<input
+				type="text"
+				bind:value={description}
+				bind:this={descriptionInput}
+				placeholder="Descripción"
+				style="margin-right:0.5rem;"
+			/>
+			<button aria-label="Guardar descripción" on:click={() => stopEditingDescription(true)} style="background:none;border:none;cursor:pointer;padding:0 0.5rem;">
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19c-2.5-1.5-6-2-9-2V6c3 0 6.5.5 9 2 2.5-1.5 6-2 9-2v11c-3 0-6.5.5-9 2z"/></svg>
+			</button>
+		{:else}
+			<span>{description}</span>
+			<button aria-label="Editar descripción" on:click={startEditingDescription} style="background:none;border:none;cursor:pointer;padding:0 0.5rem;">
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0L9 13zm0 0L4 19l5-1 1-5z"/></svg>
+			</button>
+		{/if}
 	</div>
 	{#if saveMessage}
 		<div class="alert {saveError ? 'error' : 'success'}">
 			{saveMessage}
 		</div>
 	{/if}
-
-	<input
-		type="text"
-		bind:value={description}
-		on:input={handleTitleChange}
-		placeholder="Descripción"
-	/>
 
 	{#if exercises.length > 0}
 		<ol>
