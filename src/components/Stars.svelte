@@ -1,51 +1,50 @@
 <script lang="ts">
-	import Face from '$lib/Face.svelte';
+	import Face from '$lib/Face.svelte'
 
-	const { stars = 5, rating = -1, rate } = $props();
+	const { stars = 5, rating = -1, rate } = $props()
 
-	let active = $state(rating);
+	let active = $state(rating)
 
 	let current = $derived(() => {
-		return active;
-	});
+		return active
+	})
 
-	let isAnimating: boolean = false;
-	let interval: ReturnType<typeof setInterval> | undefined;
+	let isAnimating: boolean = false
+	let interval: ReturnType<typeof setInterval> | undefined
 
 	function handleClick(newCurrent: number): void {
-		if (isAnimating) return;
-		isAnimating = true;
+		if (isAnimating) return
+		isAnimating = true
 
-		const reset = active === newCurrent;
+		const reset = active === newCurrent
 
 		if (active === undefined || active === -1) {
-			active = -1;
+			active = -1
 		}
 
-		const inc = active < newCurrent ? 1 : -1;
+		const inc = active < newCurrent ? 1 : -1
 
 		interval = setInterval(async () => {
 			if (active === newCurrent) {
-				clearInterval(interval);
-				isAnimating = false;
+				clearInterval(interval)
+				isAnimating = false
 
-				await rate?.(current());
+				await rate?.(current())
 
 				if (reset) {
-					active = -1;
+					active = -1
 				}
 
-				return;
+				return
 			}
-			active += inc;
-		}, 200);
+			active += inc
+		}, 200)
 	}
 </script>
 
-
 <div class="rating">
 	<ul>
-		{#each Array(stars) as _, i}
+		{#each Array(stars) as _, i(i)}
 			<li>
 				<button
 					type="button"
@@ -54,7 +53,7 @@
 					class:active-3={i === active && i === 3}
 					class:active-4={i === active && i === 4}
 					onclick={() => handleClick(i)}
-					onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClick(i)}
+					onkeydown={e => (e.key === 'Enter' || e.key === ' ') && handleClick(i)}
 					aria-label={`Calificar con ${i + 1} estrellas`}
 				>
 					<section class="star-wrapper">

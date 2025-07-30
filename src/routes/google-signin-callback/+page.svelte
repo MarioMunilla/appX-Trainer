@@ -1,26 +1,25 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { supabase } from '$lib/supabaseClient';
-	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation'
+	import { supabase } from '$lib/supabaseClient'
+	import { onMount } from 'svelte'
 
-onMount(async () => {
-	const {
-		data: { session },
-		error
-	} = await supabase.auth.getSession();
+	onMount(async () => {
+		const {
+			data: { session },
+			error
+		} = await supabase.auth.getSession()
 
-	if (error || !session?.access_token) {
-		console.warn('⚠️ No hay sesión activa');
-		return goto('/');
-	}
+		if (error || !session?.access_token) {
+			console.warn('⚠️ No hay sesión activa')
+			return goto('/')
+		}
 
-	await fetch('', {
-		method: 'POST',
-		body: JSON.stringify({ jwt: session.access_token }),
-		credentials: 'include'
-	});
+		await fetch('', {
+			method: 'POST',
+			body: JSON.stringify({ jwt: session.access_token }),
+			credentials: 'include'
+		})
 
-	goto('/');
-});
-
+		goto('/')
+	})
 </script>

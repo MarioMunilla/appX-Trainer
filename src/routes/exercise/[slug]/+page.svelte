@@ -1,57 +1,57 @@
-	<script lang="ts">
-	import { goto } from '$app/navigation';
-	import { supabase } from '$lib/supabaseClient';
-	import Stars from '../../../components/Stars.svelte';
-	import type { PageData } from './$types';
+<script lang="ts">
+	import { goto } from '$app/navigation'
+	import { supabase } from '$lib/supabaseClient'
+	import Stars from '../../../components/Stars.svelte'
+	import type { PageData } from './$types'
 
-	export let data: PageData;
-	const exercise = data.exercise;
+	export let data: PageData
+	const exercise = data.exercise
 
-	let userScore = exercise.userScore ?? -1;
+	let userScore = exercise.userScore ?? -1
 
 	async function rate(score: number) {
 		const res = await fetch(`/api/exercises/${exercise.name}`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ 
+			body: JSON.stringify({
 				score,
 				id_user: '9844e6c1-0812-4f01-aa1b-1258abc17d65',
 				id_exercise: exercise.id
 			})
-		});
+		})
 		if (res.ok) {
-			userScore = score;
+			userScore = score
 		}
 	}
 
 	function goBack() {
-		goto('/exercise');
+		goto('/exercise')
 	}
 
 	async function addToRoutine() {
 		const {
 			data: { user },
 			error
-		} = await supabase.auth.getUser();
+		} = await supabase.auth.getUser()
 
 		if (!user || error) {
-			alert('Debes iniciar sesión para añadir ejercicios a tu rutina');
-			return;
+			alert('Debes iniciar sesión para añadir ejercicios a tu rutina')
+			return
 		}
-		console.log(exercise.id);
+		console.log(exercise.id)
 		const res = await fetch(`/api/routines/${exercise.id}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			}
-		});
+		})
 
 		if (res.ok) {
-			alert('Ejercicio añadido a tu rutina');
-			goto('/routine');
+			alert('Ejercicio añadido a tu rutina')
+			goto('/routine')
 		} else {
-			const err = await res.json();
-			alert('Error al añadir: ' + err.error);
+			const err = await res.json()
+			alert('Error al añadir: ' + err.error)
 		}
 	}
 </script>
@@ -69,7 +69,11 @@
 						<source src={`/exercises/${exercise.gif_url}`} type="video/mp4" />
 					</video>
 				{:else}
-					<img src={`/exercises/${exercise.gif_url}`} alt={exercise.name} class="exercise-detail__image" />
+					<img
+						src={`/exercises/${exercise.gif_url}`}
+						alt={exercise.name}
+						class="exercise-detail__image"
+					/>
 				{/if}
 				<figcaption class="exercise-detail__caption">{exercise.name}</figcaption>
 			</figure>
@@ -80,10 +84,11 @@
 				</header>
 
 				<p class="exercise-detail__text"><strong>Descripción:</strong> {exercise.description}</p>
-				<Stars rating={userScore} rate={rate} />
+				<Stars rating={userScore} {rate} />
 
 				<footer class="exercise-detail__footer">
-					<button class="exercise-detail__action" on:click={addToRoutine}>➕ Añadir a rutina</button>
+					<button class="exercise-detail__action" on:click={addToRoutine}>➕ Añadir a rutina</button
+					>
 				</footer>
 			</section>
 		</article>
@@ -92,8 +97,7 @@
 	{/if}
 </main>
 
-
-	<style>
+<style>
 	.exercise-detail {
 		padding: 2rem;
 		max-width: max-content;
@@ -201,4 +205,4 @@
 			margin: 0.5rem 0;
 		}
 	}
-	</style>
+</style>

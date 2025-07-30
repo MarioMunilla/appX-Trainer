@@ -1,5 +1,5 @@
 export type ExerciseCardProps = {
-	name: string;
-	bodyParts: string[];
-	gif_url: string;
-};
+	name: string
+	bodyParts: string[]
+	gif_url: string
+}

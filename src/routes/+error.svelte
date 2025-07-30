@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/stores'
 
-	const status = $state($page.status);
-	const error = $state($page.error);
+	const status = $state($page.status)
+	const error = $state($page.error)
 
 	const messages: Record<number, string> = {
 		400: 'Solicitud incorrecta',
@@ -11,9 +11,9 @@
 		404: 'Página no encontrada',
 		500: 'Error del servidor',
 		503: 'Servicio no disponible'
-	};
+	}
 
-	const getMessage = (status: number) => messages[status] ?? 'Error desconocido';
+	const getMessage = (status: number) => messages[status] ?? 'Error desconocido'
 </script>
 
 <div class="error-wrapper">

@@ -1,32 +1,32 @@
 <script lang="ts">
-	let email = '';
-	let password = '';
-	let error = '';
-	let isLoading = false;
+	let email = ''
+	let password = ''
+	let error = ''
+	let isLoading = false
 
 	async function register() {
-		error = '';
-		isLoading = true;
+		error = ''
+		isLoading = true
 
 		try {
 			const res = await fetch('/api/auth/sign-up', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email, password, redirectTo: window.location.origin + '/confirm' })
-			});
+			})
 
-			const result = await res.json();
+			const result = await res.json()
 
 			if (!res.ok) {
-				error = result.error;
+				error = result.error
 			} else {
-				alert('Revisa tu correo para confirmar tu cuenta.');
-				window.location.href = '/login';
+				alert('Revisa tu correo para confirmar tu cuenta.')
+				window.location.href = '/login'
 			}
-		} catch (err) {
-			error = 'Error de conexión. Intenta nuevamente.';
+		} catch (_err) {
+			error = 'Error de conexión. Intenta nuevamente.'
 		} finally {
-			isLoading = false;
+			isLoading = false
 		}
 	}
 </script>

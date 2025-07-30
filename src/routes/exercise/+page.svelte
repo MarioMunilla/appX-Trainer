@@ -1,59 +1,59 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import SearchBar from '../../components/SearchBar.svelte';
-	import type { PageData } from './$types';
-	import ExerciseCard from '../../components/ExerciseCard.svelte';
-	import FilterFavorites from '../../components/filter/FilterFavorites.svelte';
-	import FilterGroup from '../../components/filter/FilterGroup.svelte';
-	import { goto } from '$app/navigation';
-	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte';
-	import { onMount } from 'svelte';
+	import { page } from '$app/stores'
+	import SearchBar from '../../components/SearchBar.svelte'
+	import type { PageData } from './$types'
+	import ExerciseCard from '../../components/ExerciseCard.svelte'
+	import FilterFavorites from '../../components/filter/FilterFavorites.svelte'
+	import FilterGroup from '../../components/filter/FilterGroup.svelte'
+	import { goto } from '$app/navigation'
+	import FilterDifficulty from '../../components/filter/FilterDifficulty.svelte'
+	import { onMount } from 'svelte'
 
-	let { data }: { data: PageData } = $props();
-	let exercises = $state(data.exercises.results);
-	let pagination = $state(data.exercises.info);
-	let bodyParts = data.bodyParts;
+	let { data }: { data: PageData } = $props()
+	let exercises = $state(data.exercises.results)
+	let pagination = $state(data.exercises.info)
+	let bodyParts = data.bodyParts
 
-	let selectedDifficulty = $page.url.searchParams.get('difficulty') || 'all';
-	let showFavorites = $page.url.searchParams.get('favorites') === 'true';
-	let searchTerm = $page.url.searchParams.get('q') || '';
-	let searchTermGroup = $page.url.searchParams.get('group') || 'all';
+	let selectedDifficulty = $page.url.searchParams.get('difficulty') || 'all'
+	let showFavorites = $page.url.searchParams.get('favorites') === 'true'
+	let searchTerm = $page.url.searchParams.get('q') || ''
+	let searchTermGroup = $page.url.searchParams.get('group') || 'all'
 
-	let loading = false;
+	let loading = false
 
 	onMount(() => {
-	const updated = data.exercises.results.map((newEx: {id: any}) => {
-		const existing = exercises.find((ex: {id:any}) => ex.id === newEx.id);
-		return existing ?? newEx;
-	});
-	exercises = updated;
-	pagination = data.exercises.info;
-});
+		const updated = data.exercises.results.map((newEx: { id: any }) => {
+			const existing = exercises.find((ex: { id: any }) => ex.id === newEx.id)
+			return existing ?? newEx
+		})
+		exercises = updated
+		pagination = data.exercises.info
+	})
 
 	function handleGroupChange(group: string) {
-		const params = new URLSearchParams($page.url.searchParams);
-		params.delete('p');
-		group !== 'all' ? params.set('group', group) : params.delete('group');
-		goto(`/exercise?${params.toString()}`);
+		const params = new URLSearchParams($page.url.searchParams)
+		params.delete('p')
+		group !== 'all' ? params.set('group', group) : params.delete('group')
+		goto(`/exercise?${params.toString()}`)
 	}
 
 	function handleLevel(level: string) {
-		selectedDifficulty = level;
-		const params = new URLSearchParams($page.url.searchParams);
-		params.delete('p');
-		level !== 'all' ? params.set('difficulty', level) : params.delete('difficulty');
-		goto(`/exercise?${params.toString()}`);
+		selectedDifficulty = level
+		const params = new URLSearchParams($page.url.searchParams)
+		params.delete('p')
+		level !== 'all' ? params.set('difficulty', level) : params.delete('difficulty')
+		goto(`/exercise?${params.toString()}`)
 	}
 
 	async function handleFavoritesChange(isChecked: boolean) {
-		showFavorites = isChecked;
-		const params = new URLSearchParams($page.url.searchParams);
+		showFavorites = isChecked
+		const params = new URLSearchParams($page.url.searchParams)
 		if (isChecked) {
-			params.set('favorites', 'true');
+			params.set('favorites', 'true')
 		} else {
-			params.delete('favorites');
+			params.delete('favorites')
 		}
-		goto(`/exercise?${params.toString()}`);
+		goto(`/exercise?${params.toString()}`)
 	}
 
 	async function handleFavoriteToggle(id: string, isFavorite: boolean) {
@@ -62,40 +62,40 @@
 			headers: { 'Content-Type': 'application/json' },
 			credentials: 'include',
 			body: JSON.stringify({ exercise_id: id, favorite: isFavorite })
-		});
+		})
 		if (res.ok) {
-			const exercise = exercises.find((e:{id:any}) => e.id === id);
+			const exercise = exercises.find((e: { id: any }) => e.id === id)
 			if (exercise) {
-				exercise.isFavorite = isFavorite;
+				exercise.isFavorite = isFavorite
 			}
-			exercises = [...exercises]; // trigger reactivity
+			exercises = [...exercises] // trigger reactivity
 		} else {
-			console.error('Error al actualizar favorito');
-			console.error(await res.json());
+			console.error('Error al actualizar favorito')
+			console.error(await res.json())
 		}
 	}
 
 	async function fetchNextPage() {
-		if (loading || !pagination.next) return;
-		loading = true;
+		if (loading || !pagination.next) return
+		loading = true
 
-		const params = new URLSearchParams($page.url.searchParams);
-		params.set('p', pagination.next.toString());
+		const params = new URLSearchParams($page.url.searchParams)
+		params.set('p', pagination.next.toString())
 
 		const response = await fetch(`/api/exercises?${params.toString()}`, {
 			credentials: 'include'
-		});
+		})
 		if (!response.ok) {
-			loading = false;
-			console.error('Error al cargar más ejercicios');
-			return;
+			loading = false
+			console.error('Error al cargar más ejercicios')
+			return
 		}
 
-		const jsonResponse = await response.json();
-		exercises = [...exercises, ...jsonResponse.results];
-		pagination = jsonResponse.info;
+		const jsonResponse = await response.json()
+		exercises = [...exercises, ...jsonResponse.results]
+		pagination = jsonResponse.info
 
-		loading = false;
+		loading = false
 	}
 </script>
 
@@ -120,7 +120,7 @@
 						gif_url={exercise.gif_url}
 						difficulty={exercise.difficulty}
 						isFavorite={exercise.isFavorite}
-						onFavoriteChange={(isFavorite) => handleFavoriteToggle(exercise.id, isFavorite)}
+						onFavoriteChange={isFavorite => handleFavoriteToggle(exercise.id, isFavorite)}
 					/>
 				{:else}
 					<p class="no-results">No se encontraron ejercicios para tu búsqueda.</p>
@@ -135,8 +135,8 @@
 		</main>
 	</div>
 </section>
-<style>
 
+<style>
 	.exercise {
 		max-width: 128rem;
 		margin: 0 auto;
@@ -149,7 +149,6 @@
 		gap: 2rem;
 		box-sizing: border-box;
 		background-color: #cbd5e1;
-
 	}
 
 	:global(.exercise > :first-child) {
@@ -229,7 +228,7 @@
 		}
 
 		.exercise__filters {
-			order: -1; 
+			order: -1;
 		}
 	}
 

@@ -1,35 +1,33 @@
 <script lang="ts">
-	import HeartIcon from '$lib/components/HeartIcon.svelte';
+	import HeartIcon from '$lib/components/HeartIcon.svelte'
 
 	type ExerciseCardProps = {
-		id: string;
-		name: string;
-		bodyParts: string[];
-		gif_url: string;
-		difficulty: 'beginner' | 'intermediate' | 'advanced';
-		isFavorite: boolean;
+		id: string
+		name: string
+		bodyParts: string[]
+		gif_url: string
+		difficulty: 'beginner' | 'intermediate' | 'advanced'
+		isFavorite: boolean
 		onFavoriteChange: (isFavorite: boolean) => void
-	};
+	}
 
-	let { id, name, gif_url, difficulty, isFavorite, onFavoriteChange }: ExerciseCardProps = $props();
+	// FIXME: not using id???
+	let { name, gif_url, difficulty, isFavorite, onFavoriteChange }: ExerciseCardProps = $props()
 
 	/* $effect(() => {
 		console.log('isFavorite prop: ' + isFavorite)
 	}) */
-	
-	const isGif = gif_url?.endsWith('.gif') ?? false;
+
+	const isGif = gif_url?.endsWith('.gif') ?? false
 
 	function handleHeartClick(event: MouseEvent) {
-		event.preventDefault();
-		event.stopPropagation();
+		event.preventDefault()
+		event.stopPropagation()
 		onFavoriteChange(!isFavorite)
 	}
 </script>
 
-<a
-	class="exercise-card exercise-card--{difficulty}"
-	href={`/exercise/${name}`}
->
+<a class="exercise-card exercise-card--{difficulty}" href={`/exercise/${name}`}>
 	<button
 		type="button"
 		class="heart-button"
@@ -51,7 +49,6 @@
 		<h2 class="exercise-card__title">{name}</h2>
 	</div>
 </a>
-
 
 <style>
 	.exercise-card {

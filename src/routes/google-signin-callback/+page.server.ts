@@ -1,13 +1,13 @@
-import { supabase } from '$lib/supabaseClient';
-import { type Actions } from '@sveltejs/kit';
+import { supabase } from '$lib/supabaseClient'
+import { type Actions } from '@sveltejs/kit'
 
 export const actions = {
 	default: async ({ request, cookies }) => {
-		const { jwt: accessToken } = await request.json();
-		const { data } = await supabase.auth.getUser(accessToken);
+		const { jwt: accessToken } = await request.json()
+		const { data } = await supabase.auth.getUser(accessToken)
 		if (!data.user) {
 			// TODO: handle error properly
-			return { success: false };
+			return { success: false }
 		}
 
 		cookies.set('session', accessToken, {
@@ -16,8 +16,8 @@ export const actions = {
 			sameSite: 'lax',
 			secure: true,
 			maxAge: 60 * 60 * 24 * 7
-		});
+		})
 
-		return { success: true };
+		return { success: true }
 	}
-} satisfies Actions;
+} satisfies Actions

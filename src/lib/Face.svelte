@@ -1,5 +1,5 @@
 <script lang="ts">
-	export let current: number;
+	export let current: number
 </script>
 
 <span class={current !== 4 ? 'left-eye' : 'left-eye-4'}></span>

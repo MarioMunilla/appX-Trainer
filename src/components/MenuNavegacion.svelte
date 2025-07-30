@@ -1,10 +1,10 @@
 <script>
-	export let items = {};
-	let isMenuOpen = false;
-	const entradas = Object.entries(items);
+	export let items = {}
+	let isMenuOpen = false
+	const entradas = Object.entries(items)
 
 	function toggleMenu() {
-		isMenuOpen = !isMenuOpen;
+		isMenuOpen = !isMenuOpen
 	}
 </script>
 
@@ -16,7 +16,7 @@
 	<button class="nav__toggle" on:click={toggleMenu} aria-label="Menú"> ☰ </button>
 
 	<div class="nav__links" class:nav__links--open={isMenuOpen}>
-		{#each entradas as [url, contenido]}
+		{#each entradas as [url, contenido](url)}
 			{#if typeof contenido === 'string'}
 				<a class="nav__link" href={url}>{contenido}</a>
 			{:else}
@@ -85,7 +85,7 @@
 	/* .nav__link--component {
 		display: flex;
 		align-items: flex-end;
-		
+
 	}  */
 
 	@media (max-width: 768px) {
