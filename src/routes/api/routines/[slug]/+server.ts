@@ -3,154 +3,180 @@ import type { RequestHandler } from './$types'
 import { supabase } from '$lib/supabaseClient'
 
 export const GET: RequestHandler = async ({ params }) => {
-	const { slug: routine_id } = params
-	console.log(routine_id)
-	const { data: routine, error: routineError } = await supabase
-		.from('routines')
-		.select('*')
-		.eq('id', routine_id)
-		.single()
+    const { slug: routine_id } = params
+    console.log(routine_id)
 
-	if (routineError) return json({ error: routineError.message }, { status: 500 })
+    const { data: routine, error: routineError } = await supabase
+        .from('routines')
+        .select('*')
+        .eq('id', routine_id)
+        .single()
 
-	const { data: exercises, error: exercisesError } = await supabase
-		.from('routines_exercises')
-		.select('exercises(*), repetitions, order')
-		.eq('routine_id', routine_id)
+    if (routineError) return json({ error: routineError.message }, { status: 500 })
 
-	if (exercisesError) return json({ error: exercisesError.message }, { status: 500 })
+    const { data: exercises, error: exercisesError } = await supabase
+        .from('routines_exercises')
+        .select('exercises(*), repetitions, order')
+        .eq('routine_id', routine_id)
 
-	return json({
-		...routine,
-		exercises
-	})
+    if (exercisesError) return json({ error: exercisesError.message }, { status: 500 })
+
+    return json({
+        ...routine,
+        exercises
+    })
 }
 
-export const POST: RequestHandler = async ({ params, cookies }) => {
-	const { slug: exercise_id } = params
+export const POST: RequestHandler = async ({ request, params, cookies }) => {
+    const { slug: exercise_id } = params
 
-	const sessionCookie = cookies.get('session')
-	if (!sessionCookie) return json({ error: 'No autenticado (sin cookie)' }, { status: 401 })
+    // Leer cuerpo opcional
+    let body: { routine_id?: string, routine_name?: string } = {}
+    try {
+        body = await request.json()
+    } catch {
+        // cuerpo vacío está bien
+    }
 
-	const {
-		data: { user },
-		error: authError
-	} = await supabase.auth.getUser(sessionCookie)
+    const sessionCookie = cookies.get('session')
+    if (!sessionCookie) return json({ error: 'No autenticado (sin cookie)' }, { status: 401 })
 
-	if (!user || authError) return json({ error: 'No autenticado (JWT inválido)' }, { status: 401 })
+    const {
+        data: { user },
+        error: authError
+    } = await supabase.auth.getUser(sessionCookie)
 
-	// Buscar o crear rutina "Mi rutina"
-	const { data: routine, error: routineError } = await supabase
-		.from('routines')
-		.select('id')
-		.eq('user_id', user.id)
-		.eq('name', 'Mi rutina')
-		.single()
+    if (!user || authError) return json({ error: 'No autenticado (JWT inválido)' }, { status: 401 })
 
-	let routine_id: string
+    // 1. Determinar rutina destino
+    let routine_id: string | undefined
 
-	if (routineError?.code === 'PGRST116') {
-		// No existe, crearla
-		const { data: newRoutine, error: createError } = await supabase
-			.from('routines')
-			.insert([
-				{
-					user_id: user.id,
-					name: 'Mi rutina',
-					description: 'Rutina personalizada',
-					difficulty: 'beginner'
-				}
-			])
-			.select('id')
-			.single()
+    if (body.routine_id) {
+        // Validar que la rutina pertenece al usuario
+        const { data: ownRoutine, error: ownError } = await supabase
+            .from('routines')
+            .select('id,user_id')
+            .eq('id', body.routine_id)
+            .single()
 
-		if (createError) return json({ error: createError.message }, { status: 500 })
+        if (ownError) return json({ error: ownError.message }, { status: 500 })
+        if (!ownRoutine || ownRoutine.user_id !== user.id)
+            return json({ error: 'No autorizado para modificar esta rutina' }, { status: 403 })
 
-		routine_id = newRoutine.id
-		console.log('Rutina creada con ID:', routine_id)
-	} else if (routineError) {
-		return json({ error: routineError.message }, { status: 500 })
-	} else {
-		routine_id = routine.id
-		console.log('Rutina existente con ID:', routine_id)
-	}
+        routine_id = ownRoutine.id
+    } else {
+        // Si se pasa routine_name usamos ese nombre; si no, default "Mi rutina"
+        const routineName = body.routine_name?.trim() || 'Mi rutina'
 
-	// Verificar si el ejercicio ya está en la rutina
-	const { data: existing, error: checkError } = await supabase
-		.from('routines_exercises')
-		.select('*')
-		.eq('routine_id', routine_id)
-		.eq('exercise_id', exercise_id)
-		.single()
+        const { data: routine, error: routineError } = await supabase
+            .from('routines')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('name', routineName)
+            .single()
 
-	if (checkError && checkError.code !== 'PGRST116') {
-		return json({ error: checkError.message }, { status: 500 })
-	}
+        if (routineError?.code === 'PGRST116') {
+            // No existe, crearla
+            const { data: newRoutine, error: createError } = await supabase
+                .from('routines')
+                .insert([
+                    {
+                        user_id: user.id,
+                        name: routineName,
+                        description: 'Rutina personalizada',
+                        difficulty: 'beginner'
+                    }
+                ])
+                .select('id')
+                .single()
 
-	if (existing) {
-		return json({ success: false, message: 'El ejercicio ya está en la rutina' }, { status: 409 })
-	}
+            if (createError) return json({ error: createError.message }, { status: 500 })
+            routine_id = newRoutine.id
+            console.log('Rutina creada con ID:', routine_id)
+        } else if (routineError) {
+            return json({ error: routineError.message }, { status: 500 })
+        } else {
+            routine_id = routine.id
+            console.log('Rutina existente con ID:', routine_id)
+        }
+    }
 
-	// Insertar nuevo ejercicio a la rutina
-	const { error: insertError } = await supabase.from('routines_exercises').insert([
-		{
-			routine_id,
-			exercise_id,
-			repetitions: 10,
-			order: 1
-		}
-	])
+    // Verificar si el ejercicio ya está en la rutina
+    const { data: existing, error: checkError } = await supabase
+        .from('routines_exercises')
+        .select('*')
+        .eq('routine_id', routine_id)
+        .eq('exercise_id', exercise_id)
+        .single()
 
-	if (insertError) return json({ error: insertError.message }, { status: 500 })
+    if (checkError && checkError.code !== 'PGRST116') {
+        return json({ error: checkError.message }, { status: 500 })
+    }
 
-	return json({ success: true, routine_id })
+    if (existing) {
+        return json({ success: false, message: 'El ejercicio ya está en la rutina' }, { status: 409 })
+    }
+
+    // Insertar nuevo ejercicio a la rutina
+    const { error: insertError } = await supabase.from('routines_exercises').insert([
+        {
+            routine_id,
+            exercise_id,
+            repetitions: 10,
+            order: 1
+        }
+    ])
+
+    if (insertError) return json({ error: insertError.message }, { status: 500 })
+
+    return json({ success: true, routine_id })
 }
 
 export const PATCH: RequestHandler = async ({ request, params, cookies }) => {
-	const { slug: routine_id } = params
-	const token = cookies.get('session')
+    const { slug: routine_id } = params
+    const token = cookies.get('session')
 
-	if (!token) {
-		return json({ error: 'No autenticado' }, { status: 401 })
-	}
+    if (!token) {
+        return json({ error: 'No autenticado' }, { status: 401 })
+    }
 
-	const {
-		data: { user },
-		error: authError
-	} = await supabase.auth.getUser(token)
+    const {
+        data: { user },
+        error: authError
+    } = await supabase.auth.getUser(token)
 
-	if (authError || !user) {
-		return json({ error: 'No autenticado' }, { status: 401 })
-	}
+    if (authError || !user) {
+        return json({ error: 'No autenticado' }, { status: 401 })
+    }
 
-	// Verificar que la rutina pertenece al usuario
-	const { data: routine, error: routineError } = await supabase
-		.from('routines')
-		.select('user_id')
-		.eq('id', routine_id)
-		.single()
+    // Verificar que la rutina pertenece al usuario
+    const { data: routine, error: routineError } = await supabase
+        .from('routines')
+        .select('user_id')
+        .eq('id', routine_id)
+        .single()
 
-	if (routineError) {
-		return json({ error: 'Error al verificar la rutina' }, { status: 500 })
-	}
+    if (routineError) {
+        return json({ error: 'Error al verificar la rutina' }, { status: 500 })
+    }
 
-	if (!routine || routine.user_id !== user.id) {
-		return json({ error: 'No autorizado' }, { status: 403 })
-	}
+    if (!routine || routine.user_id !== user.id) {
+        return json({ error: 'No autorizado' }, { status: 403 })
+    }
 
-	const { name, description } = await request.json()
+    const { name, description } = await request.json()
 
-	const { data, error } = await supabase
-		.from('routines')
-		.update({ name, description })
-		.eq('id', routine_id)
-		.select()
-		.single()
+    const { data, error } = await supabase
+        .from('routines')
+        .update({ name, description })
+        .eq('id', routine_id)
+        .select()
+        .single()
 
-	if (error) {
-		console.error('Error updating routine:', error)
-		return json({ error: error.message }, { status: 500 })
-	}
+    if (error) {
+        console.error('Error updating routine:', error)
+        return json({ error: error.message }, { status: 500 })
+    }
 
-	return json({ success: true, data })
+    return json({ success: true, data })
 }

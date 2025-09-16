@@ -2,12 +2,16 @@
 	import { goto } from '$app/navigation'
 	import { supabase } from '$lib/supabaseClient'
 	import Stars from '../../../components/Stars.svelte'
+	import SelectRoutineModal from '../../../components/SelectRoutineModal.svelte'
 	import type { PageData } from './$types'
 
 	export let data: PageData
 	const exercise = data.exercise
 
 	let userScore = exercise.userScore ?? -1
+
+	// control del modal de selección de rutina
+	let modalVisible = false
 
 	async function rate(score: number) {
 		const res = await fetch(`/api/exercises/${exercise.name}`, {
@@ -38,20 +42,31 @@
 			alert('Debes iniciar sesión para añadir ejercicios a tu rutina')
 			return
 		}
-		console.log(exercise.id)
+		modalVisible = true
+	}
+
+	async function handleChoose(event: CustomEvent<{ routine_id?: string, routine_name?: string }>) {
+		modalVisible = false
+		const payload = event.detail
+
 		const res = await fetch(`/api/routines/${exercise.id}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
-			}
+			},
+			body: JSON.stringify(payload)
 		})
 
-		if (res.ok) {
+		const body = await res.json()
+
+		if (res.ok && body.success) {
 			alert('Ejercicio añadido a tu rutina')
-			goto('/routine')
+			const destination = body.routine_id ? `/routine?id=${body.routine_id}` : '/routine'
+			goto(destination)
+		} else if (res.status === 409) {
+			alert(body.message || 'El ejercicio ya está en la rutina')
 		} else {
-			const err = await res.json()
-			alert('Error al añadir: ' + err.error)
+			alert('Error al añadir: ' + (body.error || body.message || 'Error desconocido'))
 		}
 	}
 </script>
@@ -87,8 +102,7 @@
 				<Stars rating={userScore} {rate} />
 
 				<footer class="exercise-detail__footer">
-					<button class="exercise-detail__action" on:click={addToRoutine}>➕ Añadir a rutina</button
-					>
+					<button class="exercise-detail__action" on:click={addToRoutine}>➕ Añadir a rutina</button>
 				</footer>
 			</section>
 		</article>
@@ -96,6 +110,8 @@
 		<p class="exercise-detail__error">No se pudo cargar el ejercicio.</p>
 	{/if}
 </main>
+
+<SelectRoutineModal visible={modalVisible} on:choose={handleChoose} on:close={() => (modalVisible = false)} />
 
 <style>
 	.exercise-detail {

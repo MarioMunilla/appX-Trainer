@@ -6,11 +6,11 @@
 	let searchQuery = initialQuery
 
 	async function handleSubmit(event: Event) {
-		event.preventDefault()
-		const url = new URL(page.url)
-		url.searchParams.set('q', searchQuery)
-		url.searchParams.delete('p')
-		await goto(url.toString())
+event.preventDefault()
+const url = new URL(page.url)
+url.searchParams.set('q', searchQuery)
+url.searchParams.delete('p')
+await goto(url.toString())
 	}
 </script>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import HeartIcon from '$lib/components/HeartIcon.svelte'
 
-	type ExerciseCardProps = {
+	export type ExerciseCardProps = {
 		id: string
 		name: string
 		bodyParts: string[]
