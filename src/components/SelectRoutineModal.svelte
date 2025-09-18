@@ -21,12 +21,12 @@
 		}[]
 	>([])
 	let loading = $state(false)
-	let selected = $state<string | null>(null)
+	let selected = $state<string>('')
 	let newRoutineName = $state('')
 
 	async function loadRoutines() {
 		loading = true
-		const res = await fetch('/api/routine')
+		const res = await fetch('/api/routines')
 		if (res.ok) {
 			const json = await res.json()
 			routines = json.routines || []
@@ -65,7 +65,7 @@
 			<label>
 				Rutinas existentes
 				<select bind:value={selected}>
-					<option value="" disabled selected>Elige rutina</option>
+					<option value="" selected aria-label="Elige una rutina">Elige rutina</option>
 					{#each routines as r (r.id)}
 						<option value={r.id}>{r.name} ({r.difficulty})</option>
 					{/each}
