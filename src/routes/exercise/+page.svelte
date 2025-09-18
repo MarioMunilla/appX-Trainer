@@ -90,7 +90,13 @@
 			console.error('Error al cargar más ejercicios')
 			return
 		}
+		const { results, info } = await response.json()
 
+	const existingIds = new Set(exercises.map(e => e.id))
+	const uniqueNew = results.filter((ex: ExerciseRow) => !existingIds.has(ex.id))
+	pagination = info
+
+	exercises = [...exercises, ...uniqueNew]
 		// await response.json() // reserved for future pagination merging
 		/* exercises = [...exercises, ...jsonResponse.results] */
 		/* pagination = jsonResponse.info */
