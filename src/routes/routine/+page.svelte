@@ -66,8 +66,6 @@
 	)
 	let title = $state<string>(data.name || 'Mi rutina')
 	let description = $state<string>(data.description || 'Descripción de la rutina')
-	// Removed unused variable to satisfy eslint no-unused-vars
-	// let _user_id = $state<string>(data.user_id)
 	let routines = $state<PageData['routines']>(data.routines || [])
 
 	let saveMessage = $state<string>('')
@@ -213,8 +211,14 @@
 					<button type="submit" aria-label="Guardar descripción">💾</button>
 				</form>
 			{:else}
-				<p>{description}</p>
-				<button on:click={startEditingDescription} aria-label="Editar descripción">✏️</button>
+				<div class="description-row" role="group" aria-label="Descripción de la rutina">
+					<p class="description-text">{description}</p>
+					<menu class="description-actions">
+						<li>
+							<button on:click={startEditingDescription} aria-label="Editar descripción">✏️</button>
+						</li>
+					</menu>
+				</div>
 			{/if}
 		</section>
 
@@ -305,9 +309,9 @@
 
 <style>
 	.routine-container {
-		max-width: 800px;
+		max-width: 1100px;
 		margin: 0 auto;
-		padding: 1.5rem;
+		padding: 1rem;
 		display: flex;
 		flex-direction: column;
 		gap: 1.5rem;
@@ -335,7 +339,7 @@
 
 	.header h1 {
 		margin: 0;
-		font-size: 1.75rem;
+		font-size: clamp(1.25rem, 2vw, 2rem);
 		line-height: 1.2;
 	}
 
@@ -366,18 +370,6 @@
 		padding: 0.5rem;
 	}
 
-	.btn-primary {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.75rem 1.5rem;
-		background-color: #3b82f6;
-		color: white;
-		text-decoration: none;
-		border-radius: 0.5rem;
-		font-weight: 500;
-	}
-
 	.btn-primary:hover {
 		background-color: #2563eb;
 		transform: translateY(-1px);
@@ -406,11 +398,22 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
 
+	.exercise-item img,
+	.exercise-item video {
+		max-width: 100%;
+		height: auto;
+		border-radius: 0.5rem;
+	}
+
 	.exercise-header {
 		display: grid;
 		grid-template-columns: 1fr auto;
 		gap: 1rem;
 		margin-bottom: 1rem;
+	}
+
+	.exercise-name {
+		font-size: clamp(1rem, 1.5vw, 1.25rem);
 	}
 
 	.exercise-controls {
@@ -452,13 +455,36 @@
 		color: white;
 	}
 
-	.routine-car {
+	.routine-card {
 		background: white;
-		border-radius: rem;
+		border-radius: 1rem;
 		padding: 1rem;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 		text-align: center;
-		margin: 10rem;
+		margin: 0 auto;
+		max-width: 52rem;
+	}
+
+	.description-row {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding: 0.1rem;
+	}
+
+	.description-text {
+		margin: 0;
+		font-size: clamp(1rem, 2.2vw, 1.125rem);
+		color: #0f172a;
+	}
+
+	.description-actions {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		gap: 0.5rem;
 	}
 
 	.sr-only {
@@ -508,9 +534,36 @@
 			grid-template-columns: 1fr;
 		}
 
+		.exercise-controls {
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.exercise-controls li {
+			flex: 1 1 45%;
+			display: flex;
+			justify-content: center;
+		}
+
+		.exercise-controls button {
+			width: 100%;
+			padding: 0.75rem;
+			font-size: 1.2rem;
+		}
+
 		.routine-tabs {
 			flex-direction: column;
 			align-items: stretch;
+		}
+	}
+
+	@media (min-width: 768px) and (max-width: 1024px) {
+		.routine-container {
+			padding: 2rem;
+		}
+
+		.exercise-item {
+			padding: 2rem;
 		}
 	}
 </style>

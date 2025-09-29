@@ -14,6 +14,8 @@
 		color: rgba(255, 255, 255, 0.7);
 		text-align: center;
 		border-top: 1px solid rgba(25, 118, 210, 0.2);
+		width: 100%;
+		max-width: 100%;
 	}
 
 	.footer__content {
