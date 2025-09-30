@@ -106,11 +106,9 @@
 
 	<aside class="exercise__filters">
 		<h2 class="exercise__filters-title">Filters</h2>
-		<div class="exercise__filters-col">
-			<FilterGroup options={bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
-			<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
-			<FilterFavorites bind:checked={showFavorites} onchange={handleFavoritesChange} />
-		</div>
+		<FilterGroup options={bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
+		<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
+		<FilterFavorites bind:checked={showFavorites} onchange={handleFavoritesChange} />
 	</aside>
 
 	<main class="exercise__content">
@@ -139,6 +137,12 @@
 </section>
 
 <style>
+	.exercise-wrapper {
+		display: flex;
+		flex-direction: column;
+		max-width: 1366px;
+		margin: 0 auto;
+	}
     .exercise {
         min-width: 32rem;
         width: 100%;
@@ -154,35 +158,20 @@
     }
 
     .exercise__filters {
-        display: flex;
-        flex-direction: column;
-        align-content: center;
-        background-color: #f8f8f8;
-        width: 100%;
-        max-width: 600px;
-        padding: 20rem;
-        margin-right: 5rem;
-        padding: clamp(1rem, 2vw, 20rem);
+        display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 0 1rem;
+		padding: 2rem;
         border-radius: 1.2rem;
+        background-color: #f8f8f8;
         box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
         border: 1px solid #dddddd;
-        box-sizing: border-box;
-		justify-content: space-around;
     }
 
     .exercise__filters-title {
+		grid-column: 1 / -1;
         font-size: 1.8rem;
         margin-bottom: 1rem;
-        align-self: flex-start;
-    }
-
-    .exercise__filters-col {
-        display: flex;
-        flex-direction: row;
-		align-content: flex-start;
-        width: 100%;
-        gap: 1.5rem;
-		align-items: center;
     }
 
     .exercise__content {
