@@ -82,13 +82,11 @@
 		background-color: #1976d2;
 		transform: scale(1.05);
 	}
-	/* .nav__link--component {
-		display: flex;
-		align-items: flex-end;
-
-	}  */
 
 	@media (max-width: 768px) {
+		.nav{
+			padding: 1rem;
+		}
 		.nav__toggle {
 			display: block;
 		}
@@ -116,4 +114,9 @@
 			padding: 1rem 0;
 		}
 	}
+	/* @media (max-width: 500px) {
+		.nav{
+				padding: 1rem;
+		}
+	} */
 </style>

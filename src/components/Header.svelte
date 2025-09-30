@@ -12,3 +12,13 @@
 		}}
 	/>
 </header>
+
+<style>
+    header {
+        background: #0f1a2b;
+    }
+
+    :global(header) {
+        width: 100%;
+    }
+</style>

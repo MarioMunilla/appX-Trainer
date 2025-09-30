@@ -10,7 +10,7 @@
 	import { goto } from '$app/navigation'
 
 	let { data }: { data: PageData } = $props()
-	let exercises = $derived<ExercisesResponse['results']>(data.exercises.results) // $state<ExercisesResponse['results']>(data.exercises.results)
+	let exercises = $derived<ExercisesResponse['results']>(data.exercises.results)
 	let pagination = $derived<ExercisesResponse['info']>(data.exercises.info)
 	let bodyParts: BodyPartsResponse = data.bodyParts
 
@@ -33,7 +33,6 @@
 	}
 
 	async function handleLevel(level: string) {
-		console.log(exercises)
 		selectedDifficulty = level
 		const url = new URL($page.url)
 		url.searchParams.delete('p')
@@ -68,7 +67,6 @@
 			if (exercise) {
 				exercise.isFavorite = isFavorite
 			}
-			/* exercises = [...exercises]  */// trigger reactivity
 		} else {
 			console.error('Error al actualizar favorito')
 			console.error(await res.json())
@@ -92,14 +90,10 @@
 		}
 		const { results, info } = await response.json()
 
-	const existingIds = new Set(exercises.map(e => e.id))
-	const uniqueNew = results.filter((ex: ExerciseRow) => !existingIds.has(ex.id))
-	pagination = info
-
-	exercises = [...exercises, ...uniqueNew]
-		// await response.json() // reserved for future pagination merging
-		/* exercises = [...exercises, ...jsonResponse.results] */
-		/* pagination = jsonResponse.info */
+		const existingIds = new Set(exercises.map(e => e.id))
+		const uniqueNew = results.filter((ex: ExerciseRow) => !existingIds.has(ex.id))
+		pagination = info
+		exercises = [...exercises, ...uniqueNew]
 
 		loading = false
 	}
@@ -108,171 +102,139 @@
 <section class="exercise-wrapper">
 	<div class="exercise">
 		<SearchBar initialQuery={searchTerm} />
-
-		<aside class="exercise__filters">
-			<h2 class="exercise__filters-title">Filters</h2>
-			<FilterGroup options={bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
-			<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
-			<FilterFavorites bind:checked={showFavorites} onchange={handleFavoritesChange} />
-		</aside>
-
-		<main class="exercise__content">
-			<div class="exercise__grid">
-				{#each exercises as exercise (exercise.id)}
-					<ExerciseCard
-						id={exercise.id}
-						name={exercise.name}
-						bodyParts={[exercise.bodyPart as string]}
-						gif_url={exercise.gif_url}
-						difficulty={exercise.difficulty as 'beginner' | 'intermediate' | 'advanced'}
-						isFavorite={!!exercise.isFavorite}
-						onFavoriteChange={isFavorite => handleFavoriteToggle(exercise.id, isFavorite)}
-					/>
-				{:else}
-					<p class="no-results">No se encontraron ejercicios para tu búsqueda.</p>
-				{/each}
-			</div>
-
-			{#if pagination.next}
-				<button onclick={fetchNextPage} class="load-more" disabled={loading}>
-					{#if loading}Cargando...{:else}Cargar más{/if}
-				</button>
-			{/if}
-		</main>
 	</div>
+
+	<aside class="exercise__filters">
+		<h2 class="exercise__filters-title">Filters</h2>
+		<FilterGroup options={bodyParts} onChange={handleGroupChange} selected={searchTermGroup} />
+		<FilterDifficulty selected={selectedDifficulty} onChange={handleLevel} />
+		<FilterFavorites bind:checked={showFavorites} onchange={handleFavoritesChange} />
+	</aside>
+
+	<main class="exercise__content">
+		<div class="exercise__grid">
+			{#each exercises as exercise (exercise.id)}
+				<ExerciseCard
+					id={exercise.id}
+					name={exercise.name}
+					bodyParts={[exercise.bodyPart as string]}
+					gif_url={exercise.gif_url}
+					difficulty={exercise.difficulty as 'beginner' | 'intermediate' | 'advanced'}
+					isFavorite={!!exercise.isFavorite}
+					onFavoriteChange={isFavorite => handleFavoriteToggle(exercise.id, isFavorite)}
+				/>
+			{:else}
+				<p class="no-results">No se encontraron ejercicios para tu búsqueda.</p>
+			{/each}
+		</div>
+
+		{#if pagination.next}
+			<button onclick={fetchNextPage} class="load-more" disabled={loading}>
+				{#if loading}Cargando...{:else}Cargar más{/if}
+			</button>
+		{/if}
+	</main>
 </section>
 
 <style>
-	.exercise {
-		max-width: 128rem;
-		margin: 0 auto;
-		padding: 2rem;
-		display: grid;
-		grid-template-areas:
-			'search search'
-			'filters content';
-		grid-template-columns: 1fr 3fr;
-		gap: 2rem;
-		box-sizing: border-box;
-		background-color: #cbd5e1;
-	}
-
-	:global(.exercise > :first-child) {
-		grid-area: search;
-	}
-
-	.exercise__filters {
-		grid-area: filters;
-		background-color: #f8f8f8;
-		padding: 2rem;
-		border-radius: 1.2rem;
-		box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
-		border: 1px solid #dddddd;
-		width: 100%;
-		max-width: 100%;
-		box-sizing: border-box;
-		overflow: hidden;
-	}
-
-	.exercise__filters-title {
-		font-size: 1.8rem;
-		margin-bottom: 1.2rem;
-	}
-
-	.exercise__content {
-		grid-area: content;
+	.exercise-wrapper {
 		display: flex;
 		flex-direction: column;
-		gap: 2rem;
+		max-width: 1366px;
+		margin: 0 auto;
 	}
+    .exercise {
+        min-width: 32rem;
+        width: 100%;
+        margin: 0 auto;
+        padding: clamp(1rem, 2vw, 2rem);
+        background-color: #cbd5e1;
+        border-radius: 1rem;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        box-sizing: border-box;
+    }
 
-	.exercise__grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-		gap: 2rem;
-		width: 100%;
-	}
-
-	.no-results {
-		grid-column: 1 / -1;
-		text-align: center;
-		font-size: 1.6rem;
-		color: #e41654;
+    .exercise__filters {
+        display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 0 1rem;
 		padding: 2rem;
-	}
+        border-radius: 1.2rem;
+        background-color: #f8f8f8;
+        box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.1);
+        border: 1px solid #dddddd;
+    }
 
-	.load-more {
-		align-self: center;
-		padding: 1rem 2rem;
-		font-size: 1.6rem;
-		background-color: #3b82f6;
-		color: #fff;
-		border: none;
-		border-radius: 0.6rem;
-		cursor: pointer;
-		transition: background-color 0.2s ease-in-out;
-	}
+    .exercise__filters-title {
+		grid-column: 1 / -1;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
 
-	.load-more:disabled {
-		background-color: #94a3b8;
-		cursor: not-allowed;
-	}
+    .exercise__content {
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+		padding-bottom:1.5rem ;
+    }
 
-	.load-more:hover:enabled {
-		background-color: #2563eb;
-	}
+    .exercise__grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        width: 100%;
+    }
 
-	@media (max-width: 1024px) {
-		.exercise {
-			display: flex;
-			flex-direction: column;
-		}
+    .no-results {
+        grid-column: 1 / -1;
+        text-align: center;
+        font-size: 1.6rem;
+        color: #e41654;
+        padding: 2rem;
+    }
 
-		.exercise__filters,
-		.exercise__content {
-			width: 100%;
-		}
+    .load-more {
+        align-self: center;
+        padding: 1rem 2rem;
+        font-size: 1.6rem;
+        background-color: #3b82f6;
+        color: #fff;
+        border: none;
+        border-radius: 0.6rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
 
-		.exercise__filters {
-			order: -1;
-		}
-	}
+    .load-more:disabled {
+        background-color: #94a3b8;
+        cursor: not-allowed;
+    }
 
-	@media (max-width: 600px) {
-		.exercise {
-			padding: 1rem;
-		}
+    .load-more:hover:enabled {
+        background-color: #2563eb;
+    }
 
-		.exercise__filters {
-			padding: 1.5rem;
-			margin-bottom: 1rem;
-			overflow-x: hidden;
-			max-width: 100%;
-		}
+    @media (max-width: 1024px) {
+        .exercise__grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 
-		.exercise__filters-title {
-			font-size: 1.6rem;
-		}
-
-		.load-more {
-			width: 60%;
-			font-size: 1.4rem;
-		}
-	}
-
-	@media (max-width: 480px) {
-		.exercise {
-			padding: 0.75rem;
-		}
-
-		.exercise__filters {
-			padding: 1rem;
-			border-radius: 0.8rem;
-		}
-
-		.exercise__filters-title {
-			font-size: 1.4rem;
-			margin-bottom: 1rem;
-		}
-	}
+    @media (max-width: 600px) {
+        .exercise {
+            flex-direction: column;
+        }
+        .exercise__filters {
+            max-width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .exercise__grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>

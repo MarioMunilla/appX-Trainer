@@ -26,10 +26,8 @@
 	.filter {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		margin-bottom: 1.5rem;
+		justify-content: flex-end;
 	}
-
 	.filter__label-checkbox {
 		display: flex;
 		align-items: center;

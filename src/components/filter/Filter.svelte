@@ -31,8 +31,6 @@
 	.filter {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		margin-bottom: 1.5rem;
 		position: relative;
 		width: 100%;
 		max-width: 100%;

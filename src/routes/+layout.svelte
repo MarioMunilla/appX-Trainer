@@ -23,6 +23,7 @@
 		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
+		width: 100%;
 	}
 
 	.main-content {
@@ -30,5 +31,12 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
+	}
+
+	:global(header),
+	:global(footer) {
+		width: 100%;
+		max-width: 100%;
+		display: block;
 	}
 </style>
