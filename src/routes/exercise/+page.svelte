@@ -179,6 +179,7 @@
         display: flex;
         flex-direction: column;
         gap: 2rem;
+		padding-bottom:1.5rem ;
     }
 
     .exercise__grid {
