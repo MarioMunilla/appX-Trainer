@@ -22,6 +22,9 @@
 	import { invalidate } from '$app/navigation'
 	import { Motion } from 'svelte-motion'
 	import { spring } from 'svelte/motion'
+  import PlusIcon from '../../components/PlusIcon.svelte'
+  import SubtractionIcon from '../../components/SubtractionIcon.svelte'
+  import PencilIcon from '../../components/PencilIcon.svelte'
 
 	let data: PageData = $props()
 
@@ -61,7 +64,7 @@
 	let exercises = $state<ExerciseWithWeight[]>(
 		(data.exercises || []).map(ex => ({
 			...ex,
-			weight: 0
+			weight: ex.weight || 0
 		}))
 	)
 	let title = $state<string>(data.name || 'Mi rutina')
@@ -84,7 +87,7 @@
 
 		const routineData: RoutineDetailResponse = await res.json()
 		routine_id = routineData.id
-		exercises = (routineData.exercises || []).map(ex => ({ ...ex, weight: 0 }))
+		exercises = (routineData.exercises || []).map(ex => ({ ...ex, weight: ex.weight || 0 }))
 		title = routineData.name || 'Mi rutina'
 		description = routineData.description || 'Descripción de la rutina'
 		originalTitle = title
@@ -118,14 +121,68 @@
 		editingDescription = false
 	}
 
-	function incrementWeight(index: number): void {
-		exercises[index].weight = (exercises[index].weight || 0) + 1
-		exercises = [...exercises]
+	async function incrementWeight(index: number): Promise<void> {
+		const newWeight = (exercises[index].weight || 0) + 1
+		const exerciseId = exercises[index]?.exercises?.id || exercises[index]?.exercise_id
+		const response = await fetch(`/api/routines/${routine_id}/${exerciseId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ weight: newWeight })
+		})
+		if (response.ok) {
+			exercises[index].weight = newWeight
+			exercises = [...exercises]
+		} else {
+			console.error('Error al incrementar peso:', await response.json())
+		}
 	}
 
-	function decrementWeight(index: number): void {
-		exercises[index].weight = Math.max((exercises[index].weight || 0) - 1, 0)
-		exercises = [...exercises]
+	async function decrementWeight(index: number): Promise<void> {
+		const newWeight = Math.max((exercises[index].weight || 0) - 1, 0)
+		const exerciseId = exercises[index]?.exercises?.id || exercises[index]?.exercise_id
+		const response = await fetch(`/api/routines/${routine_id}/${exerciseId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ weight: newWeight })
+		})
+		if (response.ok) {
+			exercises[index].weight = newWeight
+			exercises = [...exercises]
+		} else {
+			console.error('Error al decrementar peso:', await response.json())
+		}
+	}
+
+	async function incrementRepetitions(index: number): Promise<void> {
+		const newRepetitions = (exercises[index].repetitions || 0) + 1
+		const exerciseId = exercises[index]?.exercises?.id || exercises[index]?.exercise_id
+		const response = await fetch(`/api/routines/${routine_id}/${exerciseId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ repetitions: newRepetitions })
+		})
+		if (response.ok) {
+			exercises[index].repetitions = newRepetitions
+			exercises = [...exercises]
+		} else {
+			console.error('Error al incrementar repeticiones:', await response.json())
+		}
+	}
+
+	async function decrementRepetitions(index: number): Promise<void> {
+		const newRepetitions = Math.max((exercises[index].repetitions || 0) - 1, 1)
+		const exerciseId = exercises[index]?.exercises?.id || exercises[index]?.exercise_id
+		const response = await fetch(`/api/routines/${routine_id}/${exerciseId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ repetitions: newRepetitions })
+		})
+		if (response.ok) {
+			exercises[index].repetitions = newRepetitions
+			exercises = [...exercises]
+		} else {
+			console.error('Error al decrementar repeticiones:', await response.json())
+		}
 	}
 
 	function moveUp(index: number): void {
@@ -192,7 +249,7 @@
 				</form>
 			{:else}
 				<h1>{title}</h1>
-				<button on:click={startEditingTitle} aria-label="Editar nombre">✏️</button>
+				<button on:click={startEditingTitle} aria-label="Editar nombre" class="btn-pencil"><PencilIcon/></button>
 			{/if}
 		</header>
 
@@ -215,7 +272,7 @@
 					<p class="description-text">{description}</p>
 					<menu class="description-actions">
 						<li>
-							<button on:click={startEditingDescription} aria-label="Editar descripción">✏️</button>
+							<button on:click={startEditingDescription} aria-label="Editar descripción" class="btn-pencil"><PencilIcon /></button>
 						</li>
 					</menu>
 				</div>
@@ -235,9 +292,12 @@
 						<article class="exercise-header">
 							<h3 class="exercise-name">{item.exercises?.name}</h3>
 							<menu class="exercise-controls">
-								<li><button on:click={() => decrementWeight(index)} aria-label="Reducir peso">-</button></li>
+								<li><button on:click={() => decrementRepetitions(index)} aria-label="Reducir repeticiones" class="btn-subtraction"><SubtractionIcon/></button></li>
+								<li><span class="repetitions">{item.repetitions} reps</span></li>
+								<li><button on:click={() => incrementRepetitions(index)} aria-label="Aumentar repeticiones" class="btn-addition"><PlusIcon/></button></li>
+								<li><button on:click={() => decrementWeight(index)} aria-label="Reducir peso" class="btn-subtraction"><SubtractionIcon/></button></li>
 								<li><span class="weight">{item.weight || 0} kg</span></li>
-								<li><button on:click={() => incrementWeight(index)} aria-label="Aumentar peso">+</button></li>
+								<li><button on:click={() => incrementWeight(index)} aria-label="Aumentar peso" class="btn-addition"><PlusIcon/></button></li>
 								<li><button on:click={() => moveUp(index)} aria-label="Mover arriba">▲</button></li>
 								<li><button on:click={() => moveDown(index)} aria-label="Mover abajo">▼</button></li>
 							</menu>
@@ -306,8 +366,7 @@
 		</section>
 	{/if}
 </main>
-
-<style>
+<style lang="scss">
 	.routine-container {
 		max-width: 1100px;
 		margin: 0 auto;
@@ -315,176 +374,342 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1.5rem;
-	}
 
-	.routine-selector {
-		margin-bottom: 1.5rem;
-	}
+		.routine-selector {
+			margin-bottom: 1.5rem;
 
-	.routine-selector select {
-		width: 100%;
-		padding: 0.75rem;
-		border-radius: 0.5rem;
-		border: 2px solid #e2e8f0;
-		background-color: #f8fafc;
-		font-size: 1rem;
-	}
+			select {
+				width: 100%;
+				padding: 0.75rem;
+				border-radius: 0.5rem;
+				border: 2px solid #e2e8f0;
+				background-color: #f8fafc;
+				font-size: 1rem;
+			}
+		}
 
-	.header {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		align-items: center;
-		gap: 1rem;
-	}
+		.header {
+			display: grid;
+			grid-template-columns: 1fr auto;
+			align-items: center;
+			gap: 1rem;
 
-	.header h1 {
-		margin: 0;
-		font-size: clamp(1.25rem, 2vw, 2rem);
-		line-height: 1.2;
-	}
+			h1 {
+				margin: 0;
+				font-size: clamp(1.25rem, 2vw, 2rem);
+				line-height: 1.2;
+			}
 
-	form {
-		display: flex;
-		gap: 0.5rem;
-		width: 100%;
-	}
+			form {
+				display: flex;
+				gap: 0.5rem;
+				width: 100%;
 
-	input[type='text'] {
-		flex-grow: 1;
-		padding: 0.75rem;
-		border: 2px solid #e2e8f0;
-		border-radius: 0.5rem;
-		font-size: 1rem;
-		transition: border-color 0.2s;
-	}
+				input[type='text'] {
+					flex-grow: 1;
+					padding: 0.75rem;
+					border: 2px solid #e2e8f0;
+					border-radius: 0.5rem;
+					font-size: 1rem;
+					transition: border-color 0.2s;
 
-	input[type='text']:focus {
-		border-color: #3b82f6;
-		outline: none;
-	}
+					&:focus {
+						border-color: #3b82f6;
+						outline: none;
+					}
+				}
+			}
+		}
 
-	button {
-		cursor: pointer;
-		transition: all 0.2s;
-		border-radius: 0.25rem;
-		padding: 0.5rem;
-	}
+		.description-edit {
+			form {
+				display: flex;
+				gap: 0.5rem;
+				width: 100%;
 
-	.btn-primary:hover {
-		background-color: #2563eb;
-		transform: translateY(-1px);
-	}
+				input[type='text'] {
+					flex-grow: 1;
+					padding: 0.75rem;
+					border: 2px solid #e2e8f0;
+					border-radius: 0.5rem;
+					font-size: 1rem;
+					transition: border-color 0.2s;
 
-	.btn-outline {
-		background: transparent;
-		border: 2px solid #3b82f6;
-		color: #3b82f6;
-		padding: 0.5rem 1rem;
-		margin-top: 1rem;
-	}
+					&:focus {
+						border-color: #3b82f6;
+						outline: none;
+					}
+				}
+			}
 
-	.exercises-list {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		display: grid;
-		gap: 1.5rem;
-	}
+			.description-row {
+				display: flex;
+				align-items: flex-end;
+				justify-content: space-between;
+				gap: 0.75rem;
+				padding: 0.1rem;
 
-	.exercise-item {
-		background-color: white;
-		border-radius: 0.75rem;
-		padding: 1.5rem;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	}
+				.description-text {
+					margin: 0;
+					font-size: clamp(1rem, 2.2vw, 1.125rem);
+					color: #0f172a;
+				}
 
-	.exercise-item img,
-	.exercise-item video {
-		max-width: 100%;
-		height: auto;
-		border-radius: 0.5rem;
-	}
+				.description-actions {
+					list-style: none;
+					margin: 0;
+					padding: 0;
+					display: flex;
+					gap: 0.5rem;
+				}
+			}
+		}
 
-	.exercise-header {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		gap: 1rem;
-		margin-bottom: 1rem;
-	}
+		.exercises-list {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: grid;
+			gap: 1.5rem;
 
-	.exercise-name {
-		font-size: clamp(1rem, 1.5vw, 1.25rem);
-	}
+			.exercise-item {
+				background-color: white;
+				border-radius: 0.75rem;
+				padding: 1.5rem;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
-	.exercise-controls {
-		display: flex;
-		gap: 0.5rem;
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		align-items: center;
-	}
+				img,
+				video {
+					max-width: 100%;
+					height: auto;
+					border-radius: 0.5rem;
+				}
 
-	.routine-suggestions {
-		background: #f8fafc;
-		border-radius: 1rem;
-		padding: 2rem;
-		margin-top: 2rem;
-	}
+				.exercise-header {
+					display: grid;
+					grid-template-columns: 1fr auto;
+					gap: 1rem;
+					margin-bottom: 1rem;
 
-	.routine-tabs {
-		display: flex;
-		gap: 0.5rem;
-		margin: 2rem 0;
-		padding: 0;
-		list-style: none;
-		justify-content: center;
-		flex-wrap: wrap;
-	}
+					.exercise-name {
+						font-size: clamp(1rem, 1.5vw, 1.25rem);
+					}
 
-	.routine-tabs button {
-		padding: 0.75rem 1.25rem;
-		border: none;
-		background: #e2e8f0;
-		border-radius: 999px;
-		font-weight: 600;
-	}
+					.exercise-controls {
+						display: flex;
+						gap: 0.5rem;
+						list-style: none;
+						padding: 0;
+						margin: 0;
+						align-items: center;
 
-	.routine-tabs button[aria-selected="true"] {
-		background: #2563eb;
-		color: white;
-	}
+						.btn-subtraction,
+						.btn-addition {
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							width: 2.5rem;
+							height: 2.5rem;
+							border: none;
+							border-radius: 50%;
+							font-size: 1.2rem;
+							font-weight: 600;
+							cursor: pointer;
+							transition: all 0.2s ease-in-out;
+							box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+							position: relative;
+							overflow: hidden;
 
-	.routine-card {
-		background: white;
-		border-radius: 1rem;
-		padding: 1rem;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		text-align: center;
-		margin: 0 auto;
-		max-width: 52rem;
-	}
+							&::before {
+								content: '';
+								position: absolute;
+								top: 50%;
+								left: 50%;
+								width: 0;
+								height: 0;
+								background: rgba(255, 255, 255, 0.3);
+								border-radius: 50%;
+								transform: translate(-50%, -50%);
+								transition: width 0.3s ease, height 0.3s ease;
+							}
 
-	.description-row {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: 0.75rem;
-		padding: 0.1rem;
-	}
+							&:active::before {
+								width: 100%;
+								height: 100%;
+							}
 
-	.description-text {
-		margin: 0;
-		font-size: clamp(1rem, 2.2vw, 1.125rem);
-		color: #0f172a;
-	}
+							&:focus {
+								outline: none;
+								box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
+							}
+						}
 
-	.description-actions {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		gap: 0.5rem;
+						.btn-subtraction {
+							background: linear-gradient(135deg, #ef4444, #dc2626);
+							color: white;
+
+							&:focus {
+								box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5), 0 2px 4px rgba(0, 0, 0, 0.1);
+							}
+
+							&:hover {
+								background: linear-gradient(135deg, #dc2626, #b91c1c);
+								transform: translateY(-2px) scale(1.05);
+								box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+							}
+
+							&:active {
+								transform: translateY(0) scale(0.95);
+								box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+							}
+						}
+
+						.btn-addition {
+							background: linear-gradient(135deg, #10b981, #059669);
+							color: white;
+
+							&:focus {
+								box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.5), 0 2px 4px rgba(0, 0, 0, 0.1);
+							}
+
+							&:hover {
+								background: linear-gradient(135deg, #059669, #047857);
+								transform: translateY(-2px) scale(1.05);
+								box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+							}
+
+							&:active {
+								transform: translateY(0) scale(0.95);
+								box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4);
+							}
+						}
+
+						.repetitions,
+						.weight {
+							font-weight: 600;
+							font-size: 0.9rem;
+							color: #374151;
+							background: #f3f4f6;
+							padding: 0.5rem 0.75rem;
+							border-radius: 0.5rem;
+							min-width: 4rem;
+							text-align: center;
+							border: 1px solid #e5e7eb;
+						}
+					}
+				}
+			}
+		}
+
+		.routine-suggestions {
+			background: #f8fafc;
+			border-radius: 1rem;
+			padding: 2rem;
+			margin-top: 2rem;
+
+			.routine-tabs {
+				display: flex;
+				gap: 0.5rem;
+				margin: 2rem 0;
+				padding: 0;
+				list-style: none;
+				justify-content: center;
+				flex-wrap: wrap;
+
+				button {
+					padding: 0.75rem 1.25rem;
+					border: none;
+					background: #e2e8f0;
+					border-radius: 999px;
+					font-weight: 600;
+
+					&[aria-selected="true"] {
+						background: #2563eb;
+						color: white;
+					}
+				}
+			}
+
+			.routine-card {
+				background: white;
+				border-radius: 1rem;
+				padding: 1rem;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				text-align: center;
+				margin: 0 auto;
+				max-width: 52rem;
+			}
+		}
+
+		.btn-pencil {
+			cursor: pointer;
+			transition: all 0.2s;
+			border-radius: 0.25rem;
+			padding: 0.5rem;
+			background: transparent;
+			border: 2px solid #3b82f6;
+			color: #3b82f6;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 2.5rem;
+			height: 2.5rem;
+
+			&:hover {
+				background: #3b82f6;
+				color: white;
+				transform: translateY(-1px);
+				box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+			}
+
+			&:focus {
+				outline: none;
+				box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+			}
+
+			&:active {
+				transform: translateY(0);
+			}
+		}
+
+		.no-routine {
+			text-align: center;
+			padding: 3rem 1rem;
+
+			.btn-primary {
+				background: #3b82f6;
+				color: white;
+				padding: 0.75rem 1.5rem;
+				border-radius: 0.5rem;
+				text-decoration: none;
+				display: inline-block;
+				margin-top: 1rem;
+				border: none;
+				cursor: pointer;
+				transition: all 0.2s;
+
+				&:hover {
+					background-color: #2563eb;
+					transform: translateY(-1px);
+				}
+			}
+		}
+
+		.btn-outline {
+			background: transparent;
+			border: 2px solid #3b82f6;
+			color: #3b82f6;
+			padding: 0.5rem 1rem;
+			margin-top: 1rem;
+			cursor: pointer;
+			transition: all 0.2s;
+			border-radius: 0.25rem;
+
+			&:hover {
+				background: #3b82f6;
+				color: white;
+			}
+		}
 	}
 
 	.sr-only {
@@ -504,18 +729,18 @@
 		margin: 1rem 0;
 		border-radius: 0.5rem;
 		text-align: center;
-	}
 
-	.success {
-		background-color: #f0fdf4;
-		color: #166534;
-		border: 1px solid #bbf7d0;
-	}
+		&.success {
+			background-color: #f0fdf4;
+			color: #166534;
+			border: 1px solid #bbf7d0;
+		}
 
-	.error {
-		background-color: #fef2f2;
-		color: #991b1b;
-		border: 1px solid #fecaca;
+		&.error {
+			background-color: #fef2f2;
+			color: #991b1b;
+			border: 1px solid #fecaca;
+		}
 	}
 
 	.no-exercises {
@@ -524,46 +749,72 @@
 		color: #64748b;
 	}
 
-	.no-routine {
-		text-align: center;
-		padding: 3rem 1rem;
+	button {
+		cursor: pointer;
+		transition: all 0.2s;
+		border-radius: 0.25rem;
+		padding: 0.5rem;
 	}
 
 	@media (max-width: 640px) {
-		.exercise-header {
-			grid-template-columns: 1fr;
-		}
+		.routine-container {
+			.exercises-list {
+				.exercise-item {
+					.exercise-header {
+						grid-template-columns: 1fr;
 
-		.exercise-controls {
-			flex-wrap: wrap;
-			justify-content: center;
-		}
+						.exercise-controls {
+							flex-wrap: wrap;
+							justify-content: center;
 
-		.exercise-controls li {
-			flex: 1 1 45%;
-			display: flex;
-			justify-content: center;
-		}
+							li {
+								flex: 1 1 45%;
+								display: flex;
+								justify-content: center;
+							}
 
-		.exercise-controls button {
-			width: 100%;
-			padding: 0.75rem;
-			font-size: 1.2rem;
-		}
+							button {
+								width: 100%;
+								padding: 0.75rem;
+								font-size: 1.2rem;
+							}
 
-		.routine-tabs {
-			flex-direction: column;
-			align-items: stretch;
+							.btn-subtraction,
+							.btn-addition {
+								width: 3rem;
+								height: 3rem;
+								font-size: 1.4rem;
+							}
+
+							.repetitions,
+							.weight {
+								font-size: 1rem;
+								padding: 0.75rem;
+								min-width: 5rem;
+							}
+						}
+					}
+				}
+			}
+
+			.routine-suggestions {
+				.routine-tabs {
+					flex-direction: column;
+					align-items: stretch;
+				}
+			}
 		}
 	}
 
 	@media (min-width: 768px) and (max-width: 1024px) {
 		.routine-container {
 			padding: 2rem;
-		}
 
-		.exercise-item {
-			padding: 2rem;
+			.exercises-list {
+				.exercise-item {
+					padding: 2rem;
+				}
+			}
 		}
 	}
 </style>

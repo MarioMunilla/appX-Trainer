@@ -51,7 +51,16 @@ export interface RoutineExercise {
     exercise_id: string
     repetitions: number
     order: number
+    weight?: number
     exercises?: ExerciseRow
+}
+
+export interface RoutinesExercisesRow {
+    routine_id: string
+    exercise_id: string
+    repetitions: number
+    order: number
+    weight?: number | null
 }
 
 /** GET /api/routines  (rutina actual del usuario) */
@@ -75,6 +84,18 @@ export interface RoutineAddExerciseResponse {
     routine_id: string
 }
 
+/** PATCH /api/routines/[routine_id]/[exercise_id]  (actualizar ejercicio en rutina) */
+export interface RoutineExerciseUpdateBody {
+    weight?: number
+    repetitions?: number
+    order?: number
+}
+
+/** PATCH /api/routines/[routine_id]/[exercise_id]  (respuesta de actualización) */
+export interface RoutineExerciseUpdateResponse {
+    success: true
+    data: RoutinesExercisesRow
+}
 /** GET /api/routines/[slug]  (detalle rutina ajena o propia) */
 export interface RoutineDetailResponse {
     id: string
