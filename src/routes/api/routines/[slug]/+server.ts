@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
     const { data: exercises, error: exercisesError } = await supabase
         .from('routines_exercises')
-        .select('exercises(*), repetitions, order')
+        .select('exercises(*), repetitions, order, weight')
         .eq('routine_id', routine_id)
 
     if (exercisesError) return json({ error: exercisesError.message }, { status: 500 })
@@ -35,8 +35,8 @@ export const POST: RequestHandler = async ({ request, params, cookies }) => {
     try {
         body = await request.json()
     } catch {
-        // cuerpo vacío está bien
-    }
+        throw new Error('Error al leer el cuerpo de la solicitud')
+        }
 
     const sessionCookie = cookies.get('session')
     if (!sessionCookie) return json({ error: 'No autenticado (sin cookie)' }, { status: 401 })
@@ -48,11 +48,9 @@ export const POST: RequestHandler = async ({ request, params, cookies }) => {
 
     if (!user || authError) return json({ error: 'No autenticado (JWT inválido)' }, { status: 401 })
 
-    // 1. Determinar rutina destino
     let routine_id: string | undefined
 
     if (body.routine_id) {
-        // Validar que la rutina pertenece al usuario
         const { data: ownRoutine, error: ownError } = await supabase
             .from('routines')
             .select('id,user_id')
@@ -65,7 +63,6 @@ export const POST: RequestHandler = async ({ request, params, cookies }) => {
 
         routine_id = ownRoutine.id
     } else {
-        // Si se pasa routine_name usamos ese nombre; si no, default "Mi rutina"
         const routineName = body.routine_name?.trim() || 'Mi rutina'
 
         const { data: routine, error: routineError } = await supabase
@@ -76,7 +73,6 @@ export const POST: RequestHandler = async ({ request, params, cookies }) => {
             .single()
 
         if (routineError?.code === 'PGRST116') {
-            // No existe, crearla
             const { data: newRoutine, error: createError } = await supabase
                 .from('routines')
                 .insert([
